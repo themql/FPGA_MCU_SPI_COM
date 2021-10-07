@@ -1,8 +1,8 @@
 module SPI_MP_Ctrl #(
     parameter width_cmd   = 8,
     parameter width_data  = 16,
-    parameter space_max   = 16,
-    parameter space_width = 4
+    parameter channel_vaildNum  = 16,
+    parameter channel_addrWidth = 4
 )
 (
     input  clk,
@@ -58,7 +58,7 @@ always @(posedge clk , negedge rst_n) begin
     if(!rst_n)
         r_Transmit <= 0;
     else if(w_spi_done_cmd) begin
-        case (Dcmd[space_width-1:0])
+        case (Dcmd[channel_addrWidth-1:0])
             0 : r_Transmit <= Din0;
             1 : r_Transmit <= Din1;
             2 : r_Transmit <= Din2;
@@ -88,7 +88,7 @@ always @(posedge clk , negedge rst_n) begin
         Dout7 <= 0;
     end
     else if(w_spi_done_data) begin
-        case (Dcmd[space_width-1:0])
+        case (Dcmd[channel_addrWidth-1:0])
             8 : Dout0 <= w_spi_Dout;
             9 : Dout1 <= w_spi_Dout;
             10: Dout2 <= w_spi_Dout;

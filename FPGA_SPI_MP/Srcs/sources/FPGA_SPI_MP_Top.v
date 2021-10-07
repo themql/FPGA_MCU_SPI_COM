@@ -20,10 +20,11 @@ module FPGA_SPI_MP_Top (
 );
 
 
+// SPI_MP set
 parameter width_cmd   = 8;
 parameter width_data  = 16;
-parameter space_max   = 16;
-parameter space_width = 4;
+parameter channel_vaildNum  = 16;
+parameter channel_addrWidth = 4;
 
 wire [15:0] mi_tmp0 = 16'h11;
 wire [15:0] mi_tmp1 = 16'h22;
@@ -41,8 +42,8 @@ SPI_MP_Ctrl
 #(
     .width_cmd   (width_cmd   ),
     .width_data  (width_data  ),
-    .space_max   (space_max   ),
-    .space_width (space_width )
+    .channel_vaildNum  (channel_vaildNum ),
+    .channel_addrWidth (channel_addrWidth )
 )
 u_SPI_MP_Ctrl(
     .clk         (clk         ),
