@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "drv_fpga_spi.h": "c",
+        "bitband.h": "c"
+    }
+}
