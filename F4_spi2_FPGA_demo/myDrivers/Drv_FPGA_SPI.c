@@ -5,9 +5,12 @@
 #define WIDTH_BYTE_CMD    (1)
 #define WIDTH_BYTE_DATA   (2)
 #define SPI_DATA_WIDTH    (WIDTH_BYTE_DATA * 8)
+
 // 位带不好用, 不延时太快数据出错, 延1us又太慢
 #define USE_BITBAND (0)
+// todo
 #define HARD_SPI    (0)
+// ok
 #define SIMU_SPI    (1)
 
 
@@ -18,15 +21,15 @@
   #include "Drv_TIM.h"
 
   #if HARD_SPI
-    // hardspi pin addr
-    // #define PIN_SCL        (PBout(13))
-    // #define PIN_MOSI       (PCout(3))
-    // #define PIN_MISO       (PCin(2))
-    #define PIN_CS_CMD     (PCout(0))
-    #define PIN_CS_DATA    (PCout(1))
+    // // hardspi pin addr
+    // // #define PIN_SCL        (PBout(13))
+    // // #define PIN_MOSI       (PCout(3))
+    // // #define PIN_MISO       (PCin(2))
+    // #define PIN_CS_CMD     (PCout(0))
+    // #define PIN_CS_DATA    (PCout(1))
 
-    #define FPGA_SPI_CS_CMD(x)    PIN_CS_CMD = (x)
-    #define FPGA_SPI_CS_DATA(x)   PIN_CS_DATA = (x)
+    // #define FPGA_SPI_CS_CMD(x)    PIN_CS_CMD = (x)
+    // #define FPGA_SPI_CS_DATA(x)   PIN_CS_DATA = (x)
   #endif
 
   #if SIMU_SPI
@@ -56,32 +59,32 @@
 
 // Generate Timing, Send Data
 #if HARD_SPI
-  extern SPI_HandleTypeDef hspi2;
+  // extern SPI_HandleTypeDef hspi2;
 
-  void FPGA_SPI_Send_Cmd(uint32_t cmd)
-  {
-    FPGA_SPI_CS_CMD(0);
-    HAL_SPI_Transmit(&hspi2, (uint8_t*)cmd, WIDTH_BYTE_CMD, 50);
-    FPGA_SPI_CS_CMD(1);
-  }
+  // void FPGA_SPI_Send_Cmd(uint32_t cmd)
+  // {
+  //   FPGA_SPI_CS_CMD(0);
+  //   HAL_SPI_Transmit(&hspi2, (uint8_t*)cmd, WIDTH_BYTE_CMD, 50);
+  //   FPGA_SPI_CS_CMD(1);
+  // }
 
-  void FPGA_SPI_Send_Data(uint32_t data)
-  {
-    FPGA_SPI_CS_DATA(0);
-    HAL_SPI_Transmit(&hspi2, (uint8_t*)data, WIDTH_BYTE_DATA, 50);
-    FPGA_SPI_CS_DATA(1);
-  }
+  // void FPGA_SPI_Send_Data(uint32_t data)
+  // {
+  //   FPGA_SPI_CS_DATA(0);
+  //   HAL_SPI_Transmit(&hspi2, (uint8_t*)data, WIDTH_BYTE_DATA, 50);
+  //   FPGA_SPI_CS_DATA(1);
+  // }
 
-  uint32_t FPGA_SPI_Rece_Data(void)
-  {
-    uint32_t buf_data = 0;
+  // uint32_t FPGA_SPI_Rece_Data(void)
+  // {
+  //   uint32_t buf_data = 0;
 
-    FPGA_SPI_CS_DATA(0);
-    HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)buf_data, (uint8_t*)buf_data, WIDTH_BYTE_DATA, 50);
-    FPGA_SPI_CS_DATA(1);
+  //   FPGA_SPI_CS_DATA(0);
+  //   HAL_SPI_TransmitReceive(&hspi2, (uint8_t*)buf_data, (uint8_t*)buf_data, WIDTH_BYTE_DATA, 50);
+  //   FPGA_SPI_CS_DATA(1);
 
-    return  buf_data;
-  }
+  //   return  buf_data;
+  // }
 
 #elif SIMU_SPI
   #if   (SPI_DATA_WIDTH == 8 ) 
