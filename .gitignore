@@ -2,6 +2,9 @@
 !.gitignore
 !README.md
 
+!/README.assets
+!/README.assets/*
+
 !/RTL
 !/RTL/**/*
 

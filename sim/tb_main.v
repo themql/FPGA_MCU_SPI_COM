@@ -96,8 +96,8 @@ initial begin
     rst_n = 0;
     spi_scl = 0;
     spi_sdi = 0;
-    spi_cs_cmd = 0;
-    spi_cs_data = 0;
+    spi_cs_cmd = 1;
+    spi_cs_data = 1;
 #100
     rst_n = 1;
     for(i = 0; i < 10; i = i + 1) begin

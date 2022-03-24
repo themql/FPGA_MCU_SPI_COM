@@ -84,7 +84,7 @@ always @(posedge clk , negedge rst_n) begin
         else
             Dcmd <= Dcmd;
     else
-    Dcmd <= Dcmd;
+        Dcmd <= Dcmd;
 end
 
 always @(posedge clk , negedge rst_n) begin
