@@ -50,9 +50,7 @@
 
 ​		![image-20220324234240027](README.assets/Diagram_Drv_SPI.png)
 
-​				使用两条ssel对cmd和data进行区分，每次spi传输时只允许使用一条ssel，传输结束时(ssel拉高)，数据会显示在对应的端口上(Dcmd
-
-/Dout)，并且对应的结束标志(done_cmd/done_data)会拉高一个周期。cmd与data的位宽可由对应的parameter设置。
+​       使用两条ssel对cmd和data进行区分，每次spi传输时只允许使用一条ssel，传输结束时(ssel拉高)，数据会显示在对应的端口上(Dcmd/Dout)，并且对应的结束标志(done_cmd/done_data)会拉高一个周期。cmd与data的位宽可由对应的parameter设置。
 
 
 
