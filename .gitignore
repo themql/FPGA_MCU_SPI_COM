@@ -1,0 +1,11 @@
+*
+!.gitignore
+!README.md
+
+!/RTL
+!/RTL/**/*
+
+!/sim/
+
+!/mcu_driver
+!/mcu_driver/*
