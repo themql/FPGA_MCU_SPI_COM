@@ -42,6 +42,10 @@
 
 ​		描述所需的寄存器，实现Drv_SPI模块对这些寄存器的读写与寄存器的对外接口。
 
+​		其内部Drv_SPI模块的cmd端口用于读写的控制与寄存器地址的译码，cmd地址的最高位为0代表写，为1代表读，其余位参与地址译码。
+
+​		![decoder_sample](README.assets/decoder_sample.png)
+
 
 
 ### Drv_SPI.v
@@ -50,7 +54,9 @@
 
 ​		![image-20220324234240027](README.assets/Diagram_Drv_SPI.png)
 
-​       使用两条ssel对cmd和data进行区分，每次spi传输时只允许使用一条ssel，传输结束时(ssel拉高)，数据会显示在对应的端口上(Dcmd/Dout)，并且对应的结束标志(done_cmd/done_data)会拉高一个周期。cmd与data的位宽可由对应的parameter设置。
+​		spi采用mode0，CPOL=0，CPHA=0 。
+
+​		使用两条ssel对cmd和data进行区分，每次spi传输时只允许使用一条ssel，传输结束时(ssel拉高)，数据会显示在对应的端口上(Dcmd/Dout)，并且对应的结束标志(done_cmd/done_data)会拉高一个周期。cmd与data的位宽可由对应的parameter设置。
 
 
 
