@@ -98,8 +98,14 @@ initial begin
     spi_sdi = 0;
     spi_cs_cmd = 1;
     spi_cs_data = 1;
+    r_rece = 0;
+    data[0] = 0;
+    data[1] = 0;
+    data[2] = 0;
 #100
     rst_n = 1;
+    // test register
+    $write("test register\n");
     for(i = 0; i < 10; i = i + 1) begin
         data[0] = {$random};
         data[1] = {$random};
@@ -116,9 +122,32 @@ initial begin
             $write("test%d pass\n", i);
         end
         else begin
-            $write("test%d failed, data0:%d, data1:%d, data2:%d, rece:%d\n", i, data[0], data[1], data[2], r_rece);
+            $write("test%d failed, data0:%h, data1:%h, data2:%h, rece:%h\n", i, data[0], data[1], data[2], r_rece);
         end
     end
+    $write("\n");
+
+    // test fifo
+    $write("test fifo\n");
+    data[0] = 16'd0;
+    r_rece = 16'd0;
+    // write
+    #100 masterSendCMD(8'd4);
+    for (i = 0; i < 10; i = i + 1) begin
+        data[0] = i+1;
+        #100 masterSendData(data[0]);
+    end
+    // read
+    #100 masterSendCMD(8'd132);
+    for (i = 0; i < 10; i = i + 1) begin
+        #100 masterRece(r_rece);
+        if(r_rece == i+1)
+            $write("test%d pass\n", i);
+        else
+            $write("test%d failed, rece:%d\n", i, r_rece);
+    end
+    $write("\n");
+
     $write("Simulation finish!\n");
     $stop;
 end

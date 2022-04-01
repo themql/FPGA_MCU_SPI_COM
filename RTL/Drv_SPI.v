@@ -16,8 +16,8 @@ module Drv_SPI #(
     input  wire [width_data-1:0]    Din,
     output reg  [width_cmd-1 :0]    Dcmd,
     output reg  [width_data-1:0]    Dout,
-    output reg                      done_cmd,
-    output reg                      done_data
+    output reg                      begin_data,
+    output reg                      end_data
 );
 
 
@@ -71,6 +71,11 @@ assign pos_spi_cs_data = (!r_spi_cs_data[1]) &( r_spi_cs_data[0]);
 assign neg_spi_cs_data = ( r_spi_cs_data[1]) &(!r_spi_cs_data[0]);
 assign en_spi_cs_data  = (!r_spi_cs_data[1]) &(!r_spi_cs_data[0]);
 
+always @(*) begin
+    begin_data = neg_spi_cs_data;
+    end_data = pos_spi_cs_data;
+end
+
 
 // receive part
 always @(posedge clk , negedge rst_n) begin
@@ -89,15 +94,6 @@ end
 
 always @(posedge clk , negedge rst_n) begin
     if(!rst_n)
-        done_cmd <= 1'b0;
-    else if(pos_spi_cs_cmd)
-        done_cmd <= 1'b1;
-    else
-        done_cmd <= 1'b0;
-end
-
-always @(posedge clk , negedge rst_n) begin
-    if(!rst_n)
         Dout <= 0;
     else if(neg_spi_cs_data)
         Dout <= 0;
@@ -110,15 +106,6 @@ always @(posedge clk , negedge rst_n) begin
         Dout <= Dout;
 end
 
-always @(posedge clk , negedge rst_n) begin
-    if(!rst_n)
-        done_data <= 1'b0;
-    else if(pos_spi_cs_data)
-        done_data <= 1'b1;
-    else
-        done_data <= 1'b0;
-end
-
 
 // transmit part
 always @(posedge clk , negedge rst_n) begin
@@ -127,8 +114,8 @@ always @(posedge clk , negedge rst_n) begin
         r_Din <= 0;
     end
     else if(neg_spi_cs_data) begin
-        spi_sdo <= r_Din[width_data-1];
-        r_Din[width_data-1:0] <= {r_Din[width_data-2:0], 1'b0};
+        spi_sdo <= Din[width_data-1];
+        r_Din[width_data-1:0] <= {Din[width_data-2:0], 1'b0};
     end
     else if(en_spi_cs_data)
         if(neg_spi_scl) begin
@@ -140,10 +127,15 @@ always @(posedge clk , negedge rst_n) begin
             r_Din <= r_Din;
         end
     else begin
-        spi_sdo <= spi_sdo;
-        r_Din <= Din;
+        spi_sdo <= 1'b0;
+        r_Din <= {width_data{1'b0}};
     end
 end
+
+
+// make verilator happy
+wire unused;
+assign unused = pos_spi_cs_cmd;
 
 
 endmodule
