@@ -74,9 +74,11 @@
 
 
 
-#### 仿真波形
+#### 仿真
 
-![sim_wave](README.assets/sim_wave.png)
+​		使用mdselsim_ase仿真，使用其他仿真器需添加altera_mf_ver仿真库。
+
+​		直接运行sim/run.bat
 
 
 

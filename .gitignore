@@ -1,6 +1,7 @@
 *
 !.gitignore
 !README.md
+!LICENSE
 
 !/README.assets
 !/README.assets/*
@@ -12,3 +13,5 @@
 
 !/mcu_driver
 !/mcu_driver/*
+
+!/quartus_prj
