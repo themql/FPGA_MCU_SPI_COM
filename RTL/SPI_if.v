@@ -18,7 +18,13 @@ module SPI_if (
     input   wire            fifo_wfull,
     output  reg             fifo_rreq,
     input   wire    [15:0]  fifo_rdata,
-    input   wire            fifo_rempty
+    input   wire            fifo_rempty,
+    // ram interface
+    output  reg             ram_wreq,
+    output  reg     [6:0]   ram_waddr,
+    output  reg     [15:0]  ram_wdata,
+    output  reg     [6:0]   ram_raddr,
+    input   wire    [15:0]  ram_rdata
 );
 
 
@@ -63,6 +69,10 @@ u_Drv_SPI(
 // 3    RW  register3
 // 4    R   register_fifo_r
 //      W   register_fifo_w
+// 5    W   register_ram_waddr
+// 6    W   register_ram_raddr
+// 7    R   register_ram_rdata
+//      W   register_ram_wdata
 //-------------------------------------
 localparam REGADDR_register0 = 0;
 localparam REGADDR_register1 = 1;
@@ -70,6 +80,10 @@ localparam REGADDR_register2 = 2;
 localparam REGADDR_register3 = 3;
 localparam REGADDR_fifo_rdata = 4;
 localparam REGADDR_fifo_wdata = 4;
+localparam REGADDR_ram_waddr = 5;
+localparam REGADDR_ram_raddr = 6;
+localparam REGADDR_ram_rdata = 7;
+localparam REGADDR_ram_wdata = 7;
 
 reg     [15:0]      register0;
 reg     [15:0]      register1;
@@ -94,6 +108,8 @@ always @(posedge clk, negedge rst_n) begin
             (WRITE_BASE + REGADDR_register1) : register1 <= Dout;
             (WRITE_BASE + REGADDR_register2) : register2 <= Dout;
             (WRITE_BASE + REGADDR_register3) : register3 <= Dout;
+            (WRITE_BASE + REGADDR_ram_waddr) : ram_waddr <= Dout[6:0];
+            (WRITE_BASE + REGADDR_ram_raddr) : ram_raddr <= Dout[6:0];
             default : ;
         endcase
     end
@@ -109,6 +125,7 @@ always @(*) begin
             (READ_BASE + REGADDR_register2) : Din = register2;
             (READ_BASE + REGADDR_register3) : Din = register3;
             (READ_BASE + REGADDR_fifo_rdata) : Din = fifo_rdata;
+            (READ_BASE + REGADDR_ram_rdata) : Din = ram_rdata;
             default : Din = {width_data{1'b0}};
         endcase
     end
@@ -149,6 +166,19 @@ always @(*) begin
         fifo_rreq = (fifo_rempty) ?1'b0 :1'b1;
     else
         fifo_rreq = 1'b0;
+end
+
+
+// ram write
+always @(*) begin
+    if(end_data &&(Dcmd == (WRITE_BASE + REGADDR_ram_wdata))) begin
+        ram_wreq = 1'b1;
+        ram_wdata = Dout;
+    end
+    else begin
+        ram_wreq = 1'b0;
+        ram_wdata = {width_data{1'b0}};
+    end
 end
 
 

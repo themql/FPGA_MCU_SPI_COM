@@ -24,8 +24,13 @@ add wave -noupdate -color Yellow -itemcolor Yellow /tb_main/u_design_main/fifo_w
 add wave -noupdate -color Yellow -itemcolor Yellow /tb_main/u_design_main/fifo_rreq
 add wave -noupdate -color Yellow -itemcolor Yellow -radix unsigned /tb_main/u_design_main/fifo_rdata
 add wave -noupdate -color Yellow -itemcolor Yellow /tb_main/u_design_main/fifo_rempty
+add wave -noupdate -color Cyan -itemcolor Cyan /tb_main/u_design_main/ram_wreq
+add wave -noupdate -color Cyan -itemcolor Cyan -radix hexadecimal /tb_main/u_design_main/ram_waddr
+add wave -noupdate -color Cyan -itemcolor Cyan -radix hexadecimal /tb_main/u_design_main/ram_wdata
+add wave -noupdate -color Cyan -itemcolor Cyan -radix hexadecimal /tb_main/u_design_main/ram_raddr
+add wave -noupdate -color Cyan -itemcolor Cyan -radix hexadecimal /tb_main/u_design_main/ram_rdata
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {18365 ns} 0}
+WaveRestoreCursors {{Cursor 1} {211377 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -41,4 +46,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {157605 ns}
+WaveRestoreZoom {0 ns} {275205 ns}

@@ -25,6 +25,12 @@ wire            fifo_rreq;
 wire [15:0]     fifo_rdata;
 wire            fifo_rempty;
 
+wire            ram_wreq;
+wire [6:0]      ram_waddr;
+wire [15:0]     ram_wdata;
+wire [6:0]      ram_raddr;
+wire [15:0]     ram_rdata;
+
 
 SPI_if u_SPI_if(
     .clk         (clk         ),
@@ -45,7 +51,13 @@ SPI_if u_SPI_if(
     .fifo_wfull  (fifo_wfull  ),
     .fifo_rreq   (fifo_rreq   ),
     .fifo_rdata  (fifo_rdata  ),
-    .fifo_rempty (fifo_rempty )
+    .fifo_rempty (fifo_rempty ),
+
+    .ram_wreq    (ram_wreq    ),
+    .ram_waddr   (ram_waddr   ),
+    .ram_wdata   (ram_wdata   ),
+    .ram_raddr   (ram_raddr   ),
+    .ram_rdata   (ram_rdata   )
 );
 
 
@@ -63,6 +75,19 @@ fpga_fifo u_fpga_fifo(
     .rdreq   (fifo_rreq   ),
     .q       (fifo_rdata  ),
     .rdempty (fifo_rempty )
+);
+
+
+// ram
+fpga_ram u_fpga_ram(
+    .wrclock   (clk       ),
+    .wren      (ram_wreq  ),
+    .wraddress (ram_waddr ),
+    .data      (ram_wdata ),
+
+    .rdclock   (clk       ),
+    .rdaddress (ram_raddr ),
+    .q         (ram_rdata )
 );
 
 

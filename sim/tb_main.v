@@ -148,6 +148,31 @@ initial begin
     end
     $write("\n");
 
+    // test ram
+    $write("test ram\n");
+    data[0] = 16'd0;
+    r_rece = 16'd0;
+    // write
+    for (i = 0; i < 10; i = i + 1) begin
+        #100 masterSendCMD(8'd5);
+        #100 masterSendData(i);
+        #100 masterSendCMD(8'd7);
+        data[0] = i+1;
+        #100 masterSendData(data[0]);
+    end
+    // read
+    for (i = 0; i < 10; i = i + 1) begin
+        #100 masterSendCMD(8'd6);
+        #100 masterSendData(9-i);
+        #100 masterSendCMD(8'd128+7);
+        #100 masterRece(r_rece);
+        if(r_rece == (9-i+1))
+            $write("test%d pass\n", i);
+        else
+            $write("test%d failed, rece:%d\n", i, r_rece);
+    end
+    $write("\n");
+
     $write("Simulation finish!\n");
     $stop;
 end
