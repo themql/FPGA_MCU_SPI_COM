@@ -80,11 +80,11 @@ module fpga_fifo (
 				.wrusedw ());
 	defparam
 		dcfifo_component.intended_device_family = "Cyclone IV E",
-		dcfifo_component.lpm_numwords = 128,
+		dcfifo_component.lpm_numwords = 256,
 		dcfifo_component.lpm_showahead = "ON",
 		dcfifo_component.lpm_type = "dcfifo",
 		dcfifo_component.lpm_width = 16,
-		dcfifo_component.lpm_widthu = 7,
+		dcfifo_component.lpm_widthu = 8,
 		dcfifo_component.overflow_checking = "ON",
 		dcfifo_component.rdsync_delaypipe = 4,
 		dcfifo_component.underflow_checking = "ON",
@@ -103,7 +103,7 @@ endmodule
 // Retrieval info: PRIVATE: AlmostFullThr NUMERIC "-1"
 // Retrieval info: PRIVATE: CLOCKS_ARE_SYNCHRONIZED NUMERIC "0"
 // Retrieval info: PRIVATE: Clock NUMERIC "4"
-// Retrieval info: PRIVATE: Depth NUMERIC "128"
+// Retrieval info: PRIVATE: Depth NUMERIC "256"
 // Retrieval info: PRIVATE: Empty NUMERIC "1"
 // Retrieval info: PRIVATE: Full NUMERIC "1"
 // Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Cyclone IV E"
@@ -131,11 +131,11 @@ endmodule
 // Retrieval info: PRIVATE: wsUsedW NUMERIC "0"
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone IV E"
-// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "128"
+// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "256"
 // Retrieval info: CONSTANT: LPM_SHOWAHEAD STRING "ON"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "dcfifo"
 // Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "16"
-// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "7"
+// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "8"
 // Retrieval info: CONSTANT: OVERFLOW_CHECKING STRING "ON"
 // Retrieval info: CONSTANT: RDSYNC_DELAYPIPE NUMERIC "4"
 // Retrieval info: CONSTANT: UNDERFLOW_CHECKING STRING "ON"
@@ -162,5 +162,5 @@ endmodule
 // Retrieval info: GEN_FILE: TYPE_NORMAL fpga_fifo.cmp FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL fpga_fifo.bsf FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL fpga_fifo_inst.v FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL fpga_fifo_bb.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL fpga_fifo_bb.v FALSE
 // Retrieval info: LIB_FILE: altera_mf

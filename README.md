@@ -2,95 +2,33 @@
 
 ## 0. Intro
 
-​		看了些资料，觉得两种FPGA与MCU通信方式十分不错：基于状态机的指令解析与基于寄存器的硬件控制。
+​        本仓库实现两种基于SPI的FPGA与MCU通讯方式：类SRAM接口与指令解析。
 
-​		指令解析效率很高，通讯协议设计的好，几次spi传输就能实现目标效果，但状态机设计比较繁琐，设计需求一变，状态机就得重写。
+​        不论哪种方式，MCU都是通过修改FPGA内部一些控制寄存器的值实现对FPGA硬件的控制。在类SRAM接口方式中，每一个控制寄存器与数据寄存器的读写都被分配了唯一的地址，通过指定地址，即可实现对目标寄存器的读或写操作。在指令解析方式中，则是通过状态机对MCU发送的指令进行解析，实现对目标寄存器的读写。
 
-​		基于寄存器的设计比较灵活，只需将FPGA的控制与配置信号设计成寄存器，由MCU改变寄存器的值即可实现对FPGA的控制。若控制信号位数少，甚至不需要spi，直接将控制信号线接到FPGA引脚上，MCU只需控制这些引脚的电平。
+​        本仓库分为两个部分，essential中实现了基本的读写功能，即寄存器的读写、FIFO的读写与DPRAM的读写，simpleDSP中实现了简单的数字信号处理功能，包括信号采样、FFT与IFFT、FIR滤波。
 
-​		本实验实现了基于寄存器的设计，FPGA采用EP4CE15，MCU采用STM32F407。
+​        实验中使用了Intel的IP核，并提供相应的仿真，具体的软硬件平台如下表所示。
 
+| 平台          |           |
+| ----------- |:--------- |
+| FPGA        | EP4CE15   |
+| MCU         | STM32F407 |
+| 软件          |           |
+| Quartus     |           |
+| Keil        |           |
+| STM32CubeMX |           |
 
-
-## 1. FPGA部分
-
-​		RTL中包含3个文件，sim中是对顶层的仿真。
-
-​		实现目标：
-
-- [x] reg0 = reg1 + reg2 + reg3
-- [x] fifo读写
-- [x] ram读写
-
-
-
-| 文件名        | 描述                                       |
-| ------------- | ------------------------------------------ |
-| design_main.v | 顶层设计                                   |
-| SPI_if.v      | spi接口(interface)，对寄存器封装           |
-| Drv_SPI.v     | spi的实现，使用两条ssel对cmd和data进行区分 |
+## 1. 目录结构
 
 
 
-### design_main.v
-
-​		顶层。
+## 2. 类SRAM
 
 
 
-* 利用SPI_if的寄存器接口实现需求设计。
-
-* FIFO需要设置为show-ahead模式。
-
-* 双口ram数据输出不需要寄存。
+## 3. 指令解析
 
 
 
-### SPI_if.v
-
-​		spi接口(interface)。
-
-![Diagram_SPI_if](README.assets/Diagram_SPI_if.png)
-
-* 描述所需的寄存器，实现Drv_SPI模块对这些寄存器的读写与寄存器的对外接口。
-
-* 其内部Drv_SPI模块的cmd端口用于读写的控制与寄存器地址的译码，cmd地址的最高位为0代表写，为1代表读，其余位参与地址译码。
-
-​	
-
-### Drv_SPI.v
-
-​		spi的实现。
-
-![Diagram_Drv_SPI](README.assets/Diagram_Drv_SPI.png)
-
-* spi采用mode0，CPOL=0，CPHA=0 。
-
-* 使用两条ssel对cmd和data进行区分，每次spi传输时只允许使用一条ssel，传输结束时(ssel拉高)，数据会显示在对应的端口上(Dcmd/Dout)。
-
-* cmd与data的位宽可由对应的parameter设置。
-
-* 传输data时，标志信号begin_data与end_data分别会在传输开始前与结束后拉高一个周期。
-
-![wave_begin_end_data](README.assets/wave_begin_end_data.png)
-
-
-
-#### 仿真
-
-​		使用mdselsim_ase仿真，使用其他仿真器需添加altera_mf_ver仿真库。
-
-​		直接运行sim/run.bat
-
-
-
-## 2. MCU驱动
-
-​		无话可说
-
-
-
-## 3. 样例
-
-​		摸了
-
+## 4. simpleDSP
