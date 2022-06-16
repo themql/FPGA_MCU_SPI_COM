@@ -1,4 +1,4 @@
-#include "Drv_FPGA_SPI.h"
+#include "Drv_FPGA_SPI_SRAMLIKE.h"
 
 
 // setting

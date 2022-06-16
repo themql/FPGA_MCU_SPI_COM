@@ -1,5 +1,5 @@
-#ifndef __DRV_FPGA_SPI_H
-#define __DRV_FPGA_SPI_H
+#ifndef __DRV_FPGA_SPI_SRAMLIKE_H
+#define __DRV_FPGA_SPI_SRAMLIKE_H
 #ifdef __cplusplus
   extern "C" {
 #endif
@@ -48,4 +48,4 @@ uint32_t  FPGA_SPI_Rece(uint8_t addr);
 #ifdef __cplusplus
   }
 #endif
-#endif /* __DRV_FPGA_SPI_H */
+#endif /* __DRV_FPGA_SPI_SRAMLIKE_H */

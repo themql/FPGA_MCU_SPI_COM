@@ -51,7 +51,7 @@ assign neg_spi_scl = ( r_spi_scl[1]) &(!r_spi_scl[0]);
 
 always @(posedge clk , negedge rst_n) begin
     if(!rst_n)
-        r_spi_cs_addr <= 2'b00;
+        r_spi_cs_addr <= 2'b11;
     else
         r_spi_cs_addr <= {r_spi_cs_addr[0], spi_cs_addr};
 end
@@ -62,7 +62,7 @@ assign en_spi_cs_addr  = (!r_spi_cs_addr[1]) &(!r_spi_cs_addr[0]);
 
 always @(posedge clk , negedge rst_n) begin
     if(!rst_n)
-        r_spi_cs_data <= 2'b00;
+        r_spi_cs_data <= 2'b11;
     else
         r_spi_cs_data <= {r_spi_cs_data[0], spi_cs_data};
 end
@@ -82,7 +82,7 @@ always @(posedge clk , negedge rst_n) begin
     if(!rst_n)
         Addr <= {width_addr{1'b0}};
     else if(neg_spi_cs_addr)
-        Addr <= 0;
+        Addr <= {width_addr{1'b0}};
     else if(en_spi_cs_addr)
         if(pos_spi_scl)
             Addr[width_addr-1:0] <= {Addr[width_addr-2:0], spi_sdi};
@@ -96,7 +96,7 @@ always @(posedge clk , negedge rst_n) begin
     if(!rst_n)
         Dout <= {width_data{1'b0}};
     else if(neg_spi_cs_data)
-        Dout <= 0;
+        Dout <= {width_data{1'b0}};
     else if(en_spi_cs_data)
         if(pos_spi_scl)
             Dout[width_data-1:0] <= {Dout[width_data-2:0], spi_sdi};
