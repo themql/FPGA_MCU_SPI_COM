@@ -106,14 +106,14 @@ reg                 rctrl;
 always @(*) begin
     if(SPI_Data_begin) begin
         case (SPI_Addr)
-            (`READ_BASE + `ADDR_SUM)  : SPI_Din = i_sum;
-            (`READ_BASE + `ADDR_NUM1) : SPI_Din = rnum1;
-            (`READ_BASE + `ADDR_NUM2) : SPI_Din = rnum2;
-            (`READ_BASE + `ADDR_NUM3) : SPI_Din = rnum3;
-            (`READ_BASE + `ADDR_fifo_r) : SPI_Din     = fifo_rdata;
-            (`READ_BASE + `ADDR_ram_rdata) : SPI_Din = ram_rdata;
-            (`READ_BASE + `ADDR_CTRL) : SPI_Din = {15'd0, rctrl};
-            default : SPI_Din = {`WIDTH_DATA{1'b0}};
+            (`READ_BASE + `ADDR_SUM)        : SPI_Din = i_sum;
+            (`READ_BASE + `ADDR_NUM1)       : SPI_Din = rnum1;
+            (`READ_BASE + `ADDR_NUM2)       : SPI_Din = rnum2;
+            (`READ_BASE + `ADDR_NUM3)       : SPI_Din = rnum3;
+            (`READ_BASE + `ADDR_fifo_r)     : SPI_Din = fifo_rdata;
+            (`READ_BASE + `ADDR_ram_rdata)  : SPI_Din = ram_rdata;
+            (`READ_BASE + `ADDR_CTRL)       : SPI_Din = {15'd0, rctrl};
+            default                         : SPI_Din = {`WIDTH_DATA{1'b0}};
         endcase
     end
     else 

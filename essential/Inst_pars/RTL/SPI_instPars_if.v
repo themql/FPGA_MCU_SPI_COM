@@ -31,7 +31,10 @@
 `define REGADDR_en      (4)
 
 
-module SPI_instPars_if (
+module SPI_instPars_if #(
+    parameter RAM_SIZE  = 256    
+)
+(
     input   wire            clk,
     input   wire            rst_n,
 
@@ -98,7 +101,7 @@ assign en = ren;
 reg     [7:0]       state_c;
 reg     [7:0]       state_n;
 
-reg     [7:0]       fsm_addr;
+reg     [15:0]      fsm_addr;
 reg     [15:0]      fsm_data;
 reg     [15:0]      fsm_cnt;
 
@@ -126,17 +129,19 @@ localparam  s_idle                  = 0,
             s_readFIFO_readData_0   = 42,
             s_readFIFO_readData_1   = 43,
 
-            s_writeRAM_getAddr      = 50,
+            s_writeRAM_getFirstAddr = 50,
             s_writeRAM_getCNT_0     = 51,
             s_writeRAM_getCNT_1     = 52,
-            s_writeRAM_writeData_0  = 53,
-            s_writeRAM_writeData_1  = 54,
+            s_writeRAM_setAddr      = 53,
+            s_writeRAM_writeData_0  = 54,
+            s_writeRAM_writeData_1  = 55,
 
-            s_readRAM_getAddr       = 60,
+            s_readRAM_getFirstAddr  = 60,
             s_readRAM_getCNT_0      = 61,
             s_readRAM_getCNT_1      = 62,
-            s_readRAM_readData_0    = 63,
-            s_readRAM_readData_1    = 64;
+            s_readRAM_setAddr       = 63,
+            s_readRAM_readData_0    = 64,
+            s_readRAM_readData_1    = 65;
 
 
 always @(posedge clk, negedge rst_n) begin
@@ -163,8 +168,8 @@ always @(*) begin
                     `OP_READREG     : state_n = s_readReg_getAddr;
                     `OP_WRITEFIFO   : state_n = s_writeFIFO_getCNT_0;
                     `OP_READFIFO    : state_n = s_readFIFO_getCNT_0;
-                    `OP_WRITERAM    : state_n = s_writeRAM_getAddr;
-                    `OP_READRAM     : state_n = s_readRAM_getAddr;
+                    `OP_WRITERAM    : state_n = s_writeRAM_getFirstAddr;
+                    `OP_READRAM     : state_n = s_readRAM_getFirstAddr;
                     default         : state_n = s_idle; 
                 endcase
             else
@@ -215,12 +220,7 @@ always @(*) begin
             else
                 state_n = state_c;
         end
-// todo
-// 
-// 
-// 
-//
-// 
+
         s_writeFIFO_getCNT_0    : begin
             if(SPI_Data_end)
                 state_n = s_writeFIFO_getCNT_1;
@@ -241,7 +241,7 @@ always @(*) begin
         end
         s_writeFIFO_writeData_1 : begin
             if(SPI_Data_end)
-                if(fsm_cnt == 0)
+                if(fsm_cnt == 1)
                     state_n = s_idle;
                 else
                     state_n = s_writeFIFO_writeData_0;
@@ -269,7 +269,7 @@ always @(*) begin
         end
         s_readFIFO_readData_1   : begin
             if(SPI_Data_end)
-                if(fsm_cnt == 0)
+                if(fsm_cnt == 1)
                     state_n = s_idle;
                 else
                     state_n = s_readFIFO_readData_0;
@@ -277,7 +277,7 @@ always @(*) begin
                 state_n = state_c;
         end
 
-        s_writeRAM_getAddr      : begin
+        s_writeRAM_getFirstAddr : begin
             if(SPI_Data_end)
                 state_n = s_writeRAM_getCNT_0;
             else
@@ -291,9 +291,12 @@ always @(*) begin
         end
         s_writeRAM_getCNT_1     : begin
             if(SPI_Data_end)
-                state_n = s_writeRAM_writeData_0;
+                state_n = s_writeRAM_setAddr;
             else
                 state_n = state_c;
+        end
+        s_writeRAM_setAddr      : begin
+            state_n = s_writeRAM_writeData_0;
         end
         s_writeRAM_writeData_0  : begin
             if(SPI_Data_end)
@@ -303,15 +306,15 @@ always @(*) begin
         end
         s_writeRAM_writeData_1  : begin
             if(SPI_Data_end)
-                if(fsm_cnt == 0)
+                if(fsm_cnt == 1)
                     state_n = s_idle;
                 else
-                    state_n = s_writeRAM_writeData_0;
+                    state_n = s_writeRAM_setAddr;
             else
                 state_n = state_c;
         end
 
-        s_readRAM_getAddr       : begin
+        s_readRAM_getFirstAddr  : begin
             if(SPI_Data_end)
                 state_n = s_readRAM_getCNT_0;
             else
@@ -329,6 +332,9 @@ always @(*) begin
             else
                 state_n = state_c;
         end
+        s_readRAM_setAddr       : begin
+            state_n = s_readRAM_readData_0;
+        end
         s_readRAM_readData_0    : begin
             if(SPI_Data_end)
                 state_n = s_readRAM_readData_1;
@@ -337,10 +343,10 @@ always @(*) begin
         end
         s_readRAM_readData_1    : begin
             if(SPI_Data_end)
-                if(fsm_cnt == 0)
+                if(fsm_cnt == 1)
                     state_n = s_idle;
                 else
-                    state_n = s_readRAM_readData_0;
+                    state_n = s_readRAM_setAddr;
             else
                 state_n = state_c;
         end
@@ -363,7 +369,7 @@ always @(posedge clk, negedge rst_n) begin
         ram_wdata   <= 16'd0;
         ram_raddr   <= 8'd0;
 
-        fsm_addr    <= 8'd0;
+        fsm_addr    <= 16'd0;
         fsm_data    <= 16'd0;
         fsm_cnt     <= 16'd0;
     end
@@ -378,7 +384,7 @@ always @(posedge clk, negedge rst_n) begin
                 ram_wdata   <= 16'd0;
                 ram_raddr   <= 8'd0;
 
-                fsm_addr    <= 8'd0;
+                fsm_addr    <= 16'd0;
                 fsm_data    <= 16'd0;
                 fsm_cnt     <= 16'd0;
             end
@@ -394,7 +400,7 @@ always @(posedge clk, negedge rst_n) begin
 
             s_writeReg_getAddr      : begin
                 if(SPI_Data_end)
-                    fsm_addr <= SPI_Dout;
+                    fsm_addr <= {8'd0, SPI_Dout};
             end
             s_writeReg_writeData_0  : begin
                 if(SPI_Data_end)
@@ -435,6 +441,7 @@ always @(posedge clk, negedge rst_n) begin
                     fsm_cnt[7:0] <= SPI_Dout;
             end
             s_writeFIFO_writeData_0 : begin
+                fifo_wreq       <= 1'b0;
                 if(SPI_Data_end)
                     fsm_data[15:8] <= SPI_Dout;
             end
@@ -442,7 +449,10 @@ always @(posedge clk, negedge rst_n) begin
                 if(SPI_Data_end) begin
                     fifo_wreq   <= (fifo_wfull) ?1'b0 :1'b1;
                     fifo_wdata  <= {fsm_data[15:8], SPI_Dout};
-                    fsm_cnt     <= fsm_cnt - 'd1;
+                    fsm_cnt     <= fsm_cnt - 16'd1;
+                end
+                else begin
+                    fifo_wreq   <= 1'b0;
                 end
             end
 
@@ -457,14 +467,14 @@ always @(posedge clk, negedge rst_n) begin
             s_readFIFO_readData_0   : begin
             end
             s_readFIFO_readData_1   : begin
-                if(SPI_Data_begin) begin
-                    fsm_cnt     <= fsm_cnt - 'd1;
+                if(SPI_Data_end) begin
+                    fsm_cnt     <= fsm_cnt - 16'd1;
                 end
             end
 
-            s_writeRAM_getAddr      : begin
+            s_writeRAM_getFirstAddr : begin
                 if(SPI_Data_end)
-                    ram_waddr <= SPI_Dout;
+                    fsm_addr <= {8'd0, SPI_Dout};
             end
             s_writeRAM_getCNT_0     : begin
                 if(SPI_Data_end)
@@ -474,21 +484,30 @@ always @(posedge clk, negedge rst_n) begin
                 if(SPI_Data_end)
                     fsm_cnt[7:0] <= SPI_Dout;
             end
+            s_writeRAM_setAddr      : begin
+                ram_waddr <= (fsm_addr >= RAM_SIZE) ?8'd0 :fsm_addr[7:0];
+                ram_wreq <= 1'b0;
+            end
             s_writeRAM_writeData_0  : begin
+                ram_wreq <= 1'b0;
                 if(SPI_Data_end)
                     fsm_data[15:8] <= SPI_Dout;
             end
             s_writeRAM_writeData_1  : begin
                 if(SPI_Data_end) begin
-                    ram_wreq    <= 1'b1;
+                    ram_wreq    <= (fsm_addr >= RAM_SIZE) ?1'b0 :1'b1;
                     ram_wdata   <= {fsm_data[15:8], SPI_Dout};
-                    fsm_cnt     <= fsm_cnt - 'd1;
+                    fsm_cnt     <= fsm_cnt - 16'd1;
+                    fsm_addr    <= fsm_addr + 16'd1;
+                end
+                else begin
+                    ram_wreq    <= 1'b0;
                 end
             end
 
-            s_readRAM_getAddr       : begin
+            s_readRAM_getFirstAddr  : begin
                 if(SPI_Data_end)
-                    ram_raddr <= SPI_Dout;
+                    fsm_addr <= {8'd0, SPI_Dout};
             end
             s_readRAM_getCNT_0      : begin
                 if(SPI_Data_end)
@@ -498,13 +517,18 @@ always @(posedge clk, negedge rst_n) begin
                 if(SPI_Data_end)
                     fsm_cnt[7:0] <= SPI_Dout;
             end
+            s_readRAM_setAddr       : begin
+                ram_raddr <= (fsm_addr >= RAM_SIZE) ?8'd0 :fsm_addr[7:0];
+            end
             s_readRAM_readData_0    : begin
             end
             s_readRAM_readData_1    : begin
                 if(SPI_Data_begin) begin
-                    fsm_cnt <= fsm_cnt - 'd1;
+                    fsm_cnt     <= fsm_cnt - 16'd1;
+                    fsm_addr    <= fsm_addr + 16'd1;
                 end
             end
+
             default                 : begin
                 rnum1   <= 16'd0;
                 rnum2   <= 16'd0;
@@ -519,7 +543,7 @@ always @(posedge clk, negedge rst_n) begin
                 ram_wdata   <= 16'd0;
                 ram_raddr   <= 8'd0;
 
-                fsm_addr    <= 8'd0;
+                fsm_addr    <= 16'd0;
                 fsm_data    <= 16'd0;
                 fsm_cnt     <= 16'd0;
             end
@@ -531,8 +555,11 @@ always @(*) begin
     if(!rst_n) begin
         SPI_Din     = {`WIDTH{1'b0}};
         fifo_rreq   = 1'b0;
+
     end
     else begin
+        SPI_Din     = {`WIDTH{1'b0}};
+        fifo_rreq   = 1'b0;
         case (state_c)
             s_readReg_readData_0    : begin
                 if(SPI_Data_begin)
@@ -544,23 +571,23 @@ always @(*) begin
             end
             s_readFIFO_readData_0   : begin
                 if(SPI_Data_begin)
-                    SPI_Din = fifo_rdata[15:8];
+                    SPI_Din = (fifo_rempty) ?8'd0 :fifo_rdata[15:8];
             end
             s_readFIFO_readData_1   : begin
                 if(SPI_Data_begin) begin
-                    SPI_Din     = fifo_rdata[7:0];
+                    SPI_Din     = (fifo_rempty) ?8'd0 :fifo_rdata[7:0];
                     fifo_rreq   = (fifo_rempty) ?1'b0 :1'b1;
                 end
             end
             s_readRAM_readData_0:   begin
                 if(SPI_Data_begin)
-                    SPI_Din = ram_rdata[15:8];
+                    SPI_Din = (fsm_addr >= RAM_SIZE) ?8'd0 :ram_rdata[15:8];
             end
             s_readRAM_readData_1:   begin
                 if(SPI_Data_begin)
-                    SPI_Din = ram_rdata[7:0];
+                    SPI_Din = (fsm_addr >= RAM_SIZE) ?8'd0 :ram_rdata[7:0];
             end
-            default: ;
+            default ;
         endcase
     end
 end

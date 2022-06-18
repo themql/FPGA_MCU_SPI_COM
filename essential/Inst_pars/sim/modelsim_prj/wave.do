@@ -19,8 +19,19 @@ add wave -noupdate -radix hexadecimal /tb_main/u_design_main/u_SPI_instPars_if/S
 add wave -noupdate -radix hexadecimal /tb_main/u_design_main/u_SPI_instPars_if/fsm_addr
 add wave -noupdate -radix hexadecimal /tb_main/u_design_main/u_SPI_instPars_if/fsm_data
 add wave -noupdate -radix hexadecimal /tb_main/u_design_main/u_SPI_instPars_if/fsm_cnt
+add wave -noupdate -color Yellow -itemcolor Yellow /tb_main/u_design_main/u_SPI_instPars_if/fifo_wreq
+add wave -noupdate -color Yellow -itemcolor Yellow -radix hexadecimal /tb_main/u_design_main/u_SPI_instPars_if/fifo_wdata
+add wave -noupdate -color Yellow -itemcolor Yellow /tb_main/u_design_main/u_SPI_instPars_if/fifo_wfull
+add wave -noupdate -color Yellow -itemcolor Yellow /tb_main/u_design_main/u_SPI_instPars_if/fifo_rreq
+add wave -noupdate -color Yellow -itemcolor Yellow -radix hexadecimal /tb_main/u_design_main/u_SPI_instPars_if/fifo_rdata
+add wave -noupdate -color Yellow -itemcolor Yellow /tb_main/u_design_main/u_SPI_instPars_if/fifo_rempty
+add wave -noupdate /tb_main/u_design_main/u_SPI_instPars_if/ram_wreq
+add wave -noupdate -radix unsigned /tb_main/u_design_main/u_SPI_instPars_if/ram_waddr
+add wave -noupdate -radix hexadecimal /tb_main/u_design_main/u_SPI_instPars_if/ram_wdata
+add wave -noupdate -radix unsigned /tb_main/u_design_main/u_SPI_instPars_if/ram_raddr
+add wave -noupdate -radix hexadecimal /tb_main/u_design_main/u_SPI_instPars_if/ram_rdata
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {26270 ns} 0}
+WaveRestoreCursors {{Cursor 1} {318367 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -36,4 +47,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {163317 ns}
+WaveRestoreZoom {0 ns} {1366113 ns}

@@ -11,5 +11,5 @@ vlog ../../../alt_ip/fpga_ram.v
 
 vsim -t ns -novopt +notimingchecks -L altera_mf_ver work.tb_main
 
-do wave.do
+# do wave.do
 run -all
