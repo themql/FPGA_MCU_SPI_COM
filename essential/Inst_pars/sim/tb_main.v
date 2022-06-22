@@ -172,27 +172,29 @@ initial begin
     // write
     Buf_send[0] = 8'h06;
     Buf_send[1] = 8'h00;
-    Buf_send[2] = 16'd300 / 256;
-    Buf_send[3] = 16'd300 % 256;
+    Buf_send[2] = 8'h00;
+    Buf_send[3] = 16'd300 / 256;
+    Buf_send[4] = 16'd300 % 256;
     for (i = 0; i < 300; i = i + 1) begin
         data[0] = 1000 + i;
-        Buf_send[4+i*2] = data[0] / 256;
-        Buf_send[5+i*2] = data[0] % 256;
+        Buf_send[5+i*2] = data[0] / 256;
+        Buf_send[6+i*2] = data[0] % 256;
     end
-    #5000 masterSendRece(604);
+    #5000 masterSendRece(605);
     // read
     Buf_send[0] = 8'h07;
     Buf_send[1] = 8'h00;
-    Buf_send[2] = 16'd300 / 256;
-    Buf_send[3] = 16'd300 % 256;
+    Buf_send[2] = 8'h00;
+    Buf_send[3] = 16'd300 / 256;
+    Buf_send[4] = 16'd300 % 256;
     for (i = 0; i < 10; i = i + 1) begin
-        Buf_send[4+i*2] = 8'h00;
         Buf_send[5+i*2] = 8'h00;
+        Buf_send[6+i*2] = 8'h00;
     end
-    #5000 masterSendRece(604);
+    #5000 masterSendRece(605);
 
     for (i = 0; i < 256; i = i + 1) begin
-        r_rece = {Buf_rece[4+i*2], Buf_rece[5+i*2]};
+        r_rece = {Buf_rece[5+i*2], Buf_rece[6+i*2]};
         if(r_rece == 1000 + i)
             ;
         else begin
@@ -201,7 +203,7 @@ initial begin
         end
     end
     for (i = 256; i < 300; i = i + 1) begin
-        r_rece = {Buf_rece[4+i*2], Buf_rece[5+i*2]};
+        r_rece = {Buf_rece[5+i*2], Buf_rece[6+i*2]};
         if(r_rece == 16'd0)
             ;
         else begin

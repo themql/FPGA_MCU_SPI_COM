@@ -1,20 +1,20 @@
 `define WIDTH   (8)
 // disable
-// 00
+// | 0x00     |
 // enable
-// 01
+// | 0x01     |
 // write register
-// 02   regAddr     regData_0   regData_1
+// | 0x02     | regAddr | regData_0 | regData_1 |
 // read register
-// 03   regAddr     00          00
+// | 0x03     | regAddr | 0x00      | 0x00      |
 // write fifo
-// 04   dataCnt_0   dataCnt_1   data0_0     data0_1     ...         dataX_0     dataX_1
+// | 0x04     | dataCnt_0 | dataCnt_1 | data0_0 | data0_1 | ... | dataX_0 | dataX_1 |
 // read fifo
-// 05   dataCnt_0   dataCnt_1   00          00          ...         00          00
+// | 0x05     | dataCnt_0 | dataCnt_1 | 0x00    | 0x00    | ... | 0x00    | 0x00    |
 // write ram
-// 06   firstAddr   dataCnt_0   dataCnt_1   data0_0     data0_1     ...         dataX_0     dataX_1
+// | 0x06     | firstAddr_0 | firstAddr_1 | dataCnt_0 | dataCnt_1 | data0_0 | data0_1 | ... | dataX_0 | dataX_1 |
 // read ram
-// 07   firstAddr   dataCnt_0   dataCnt_1   00          00          ...         00          00
+// | 0x07     | firstAddr_0 | firstAddr_1 | dataCnt_0 | dataCnt_1 | 0x00    | 0x00    | ... | 0x00    | 0x00    |
 `define OP_DISABLE      (0)
 `define OP_ENABLE       (1)
 `define OP_WRITEREG     (2)
@@ -129,19 +129,21 @@ localparam  s_idle                  = 0,
             s_readFIFO_readData_0   = 42,
             s_readFIFO_readData_1   = 43,
 
-            s_writeRAM_getFirstAddr = 50,
-            s_writeRAM_getCNT_0     = 51,
-            s_writeRAM_getCNT_1     = 52,
-            s_writeRAM_setAddr      = 53,
-            s_writeRAM_writeData_0  = 54,
-            s_writeRAM_writeData_1  = 55,
+            s_writeRAM_getFirstAddr_0   = 50,
+            s_writeRAM_getFirstAddr_1   = 51,
+            s_writeRAM_getCNT_0         = 52,
+            s_writeRAM_getCNT_1         = 53,
+            s_writeRAM_setAddr          = 54,
+            s_writeRAM_writeData_0      = 55,
+            s_writeRAM_writeData_1      = 56,
 
-            s_readRAM_getFirstAddr  = 60,
-            s_readRAM_getCNT_0      = 61,
-            s_readRAM_getCNT_1      = 62,
-            s_readRAM_setAddr       = 63,
-            s_readRAM_readData_0    = 64,
-            s_readRAM_readData_1    = 65;
+            s_readRAM_getFirstAddr_0    = 60,
+            s_readRAM_getFirstAddr_1    = 61,
+            s_readRAM_getCNT_0          = 62,
+            s_readRAM_getCNT_1          = 63,
+            s_readRAM_setAddr           = 64,
+            s_readRAM_readData_0        = 65,
+            s_readRAM_readData_1        = 66;
 
 
 always @(posedge clk, negedge rst_n) begin
@@ -168,8 +170,8 @@ always @(*) begin
                     `OP_READREG     : state_n = s_readReg_getAddr;
                     `OP_WRITEFIFO   : state_n = s_writeFIFO_getCNT_0;
                     `OP_READFIFO    : state_n = s_readFIFO_getCNT_0;
-                    `OP_WRITERAM    : state_n = s_writeRAM_getFirstAddr;
-                    `OP_READRAM     : state_n = s_readRAM_getFirstAddr;
+                    `OP_WRITERAM    : state_n = s_writeRAM_getFirstAddr_0;
+                    `OP_READRAM     : state_n = s_readRAM_getFirstAddr_0;
                     default         : state_n = s_idle; 
                 endcase
             else
@@ -277,34 +279,40 @@ always @(*) begin
                 state_n = s_readFIFO_readData_1;
         end
 
-        s_writeRAM_getFirstAddr : begin
+        s_writeRAM_getFirstAddr_0   : begin
+            if(SPI_Data_end)
+                state_n = s_writeRAM_getFirstAddr_1;
+            else
+                state_n = s_writeRAM_getFirstAddr_0;
+        end
+        s_writeRAM_getFirstAddr_1   : begin
             if(SPI_Data_end)
                 state_n = s_writeRAM_getCNT_0;
             else
-                state_n = s_writeRAM_getFirstAddr;
+                state_n = s_writeRAM_getFirstAddr_1;
         end
-        s_writeRAM_getCNT_0     : begin
+        s_writeRAM_getCNT_0         : begin
             if(SPI_Data_end)
                 state_n = s_writeRAM_getCNT_1;
             else
                 state_n = s_writeRAM_getCNT_0;
         end
-        s_writeRAM_getCNT_1     : begin
+        s_writeRAM_getCNT_1         : begin
             if(SPI_Data_end)
                 state_n = s_writeRAM_setAddr;
             else
                 state_n = s_writeRAM_getCNT_1;
         end
-        s_writeRAM_setAddr      : begin
+        s_writeRAM_setAddr          : begin
             state_n = s_writeRAM_writeData_0;
         end
-        s_writeRAM_writeData_0  : begin
+        s_writeRAM_writeData_0      : begin
             if(SPI_Data_end)
                 state_n = s_writeRAM_writeData_1;
             else
                 state_n = s_writeRAM_writeData_0;
         end
-        s_writeRAM_writeData_1  : begin
+        s_writeRAM_writeData_1      : begin
             if(SPI_Data_end)
                 if(fsm_cnt == 1)
                     state_n = s_idle;
@@ -314,34 +322,40 @@ always @(*) begin
                 state_n = s_writeRAM_writeData_1;
         end
 
-        s_readRAM_getFirstAddr  : begin
+        s_readRAM_getFirstAddr_0    : begin
+            if(SPI_Data_end)
+                state_n = s_readRAM_getFirstAddr_1;
+            else
+                state_n = s_readRAM_getFirstAddr_0;
+        end
+        s_readRAM_getFirstAddr_1    : begin
             if(SPI_Data_end)
                 state_n = s_readRAM_getCNT_0;
             else
-                state_n = s_readRAM_getFirstAddr;
+                state_n = s_readRAM_getFirstAddr_1;
         end
-        s_readRAM_getCNT_0      : begin
+        s_readRAM_getCNT_0          : begin
             if(SPI_Data_end)
                 state_n = s_readRAM_getCNT_1;
             else
                 state_n = s_readRAM_getCNT_0;
         end
-        s_readRAM_getCNT_1      : begin
+        s_readRAM_getCNT_1          : begin
             if(SPI_Data_end)
                 state_n = s_readRAM_readData_0;
             else
                 state_n = s_readRAM_getCNT_1;
         end
-        s_readRAM_setAddr       : begin
+        s_readRAM_setAddr           : begin
             state_n = s_readRAM_readData_0;
         end
-        s_readRAM_readData_0    : begin
+        s_readRAM_readData_0        : begin
             if(SPI_Data_end)
                 state_n = s_readRAM_readData_1;
             else
                 state_n = s_readRAM_readData_0;
         end
-        s_readRAM_readData_1    : begin
+        s_readRAM_readData_1        : begin
             if(SPI_Data_end)
                 if(fsm_cnt == 1)
                     state_n = s_idle;
@@ -472,28 +486,32 @@ always @(posedge clk, negedge rst_n) begin
                 end
             end
 
-            s_writeRAM_getFirstAddr : begin
+            s_writeRAM_getFirstAddr_0   : begin
                 if(SPI_Data_end)
-                    fsm_addr <= {8'd0, SPI_Dout};
+                    fsm_addr <= {SPI_Dout, 8'd0};
             end
-            s_writeRAM_getCNT_0     : begin
+            s_writeRAM_getFirstAddr_1   : begin
+                if(SPI_Data_end)
+                    fsm_addr <= {fsm_addr[15:8], SPI_Dout};
+            end
+            s_writeRAM_getCNT_0         : begin
                 if(SPI_Data_end)
                     fsm_cnt[15:8] <= SPI_Dout;
             end
-            s_writeRAM_getCNT_1     : begin
+            s_writeRAM_getCNT_1         : begin
                 if(SPI_Data_end)
                     fsm_cnt[7:0] <= SPI_Dout;
             end
-            s_writeRAM_setAddr      : begin
+            s_writeRAM_setAddr          : begin
                 ram_waddr <= (fsm_addr >= RAM_SIZE) ?8'd0 :fsm_addr[7:0];
                 ram_wreq <= 1'b0;
             end
-            s_writeRAM_writeData_0  : begin
+            s_writeRAM_writeData_0      : begin
                 ram_wreq <= 1'b0;
                 if(SPI_Data_end)
                     fsm_data[15:8] <= SPI_Dout;
             end
-            s_writeRAM_writeData_1  : begin
+            s_writeRAM_writeData_1      : begin
                 if(SPI_Data_end) begin
                     ram_wreq    <= (fsm_addr >= RAM_SIZE) ?1'b0 :1'b1;
                     ram_wdata   <= {fsm_data[15:8], SPI_Dout};
@@ -505,24 +523,28 @@ always @(posedge clk, negedge rst_n) begin
                 end
             end
 
-            s_readRAM_getFirstAddr  : begin
+            s_readRAM_getFirstAddr_0    : begin
                 if(SPI_Data_end)
-                    fsm_addr <= {8'd0, SPI_Dout};
+                    fsm_addr <= {SPI_Dout, 8'd0};
             end
-            s_readRAM_getCNT_0      : begin
+            s_readRAM_getFirstAddr_1    : begin
+                if(SPI_Data_end)
+                    fsm_addr <= {fsm_addr[15:8], SPI_Dout};
+            end
+            s_readRAM_getCNT_0          : begin
                 if(SPI_Data_end)
                     fsm_cnt[15:8] <= SPI_Dout;
             end
-            s_readRAM_getCNT_1      : begin
+            s_readRAM_getCNT_1          : begin
                 if(SPI_Data_end)
                     fsm_cnt[7:0] <= SPI_Dout;
             end
-            s_readRAM_setAddr       : begin
+            s_readRAM_setAddr           : begin
                 ram_raddr <= (fsm_addr >= RAM_SIZE) ?8'd0 :fsm_addr[7:0];
             end
-            s_readRAM_readData_0    : begin
+            s_readRAM_readData_0        : begin
             end
-            s_readRAM_readData_1    : begin
+            s_readRAM_readData_1        : begin
                 if(SPI_Data_begin) begin
                     fsm_cnt     <= fsm_cnt - 16'd1;
                     fsm_addr    <= fsm_addr + 16'd1;
