@@ -157,7 +157,7 @@ always @(*) begin
             if(SPI_Data_begin)
                 state_n = s_opDect;
             else
-                state_n = state_c;
+                state_n = s_idle;
         end
         s_opDect                : begin
             if(SPI_Data_end)
@@ -173,7 +173,7 @@ always @(*) begin
                     default         : state_n = s_idle; 
                 endcase
             else
-                state_n = state_c;
+                state_n = s_opDect;
         end
 
         s_disable               : begin
@@ -187,57 +187,57 @@ always @(*) begin
             if(SPI_Data_end)
                 state_n = s_writeReg_writeData_0;
             else
-                state_n = state_c;
+                state_n = s_writeReg_getAddr;
         end
         s_writeReg_writeData_0  : begin
             if(SPI_Data_end)
                 state_n = s_writeReg_writeData_1;
             else
-                state_n = state_c;
+                state_n = s_writeReg_writeData_0;
         end
         s_writeReg_writeData_1  : begin
             if(SPI_Data_end)
                 state_n = s_idle;
             else
-                state_n = state_c;
+                state_n = s_writeReg_writeData_1;
         end
 
         s_readReg_getAddr       : begin
             if(SPI_Data_end)
                 state_n = s_readReg_readData_0;
             else
-                state_n = state_c;
+                state_n = s_readReg_getAddr;
         end
         s_readReg_readData_0    : begin
             if(SPI_Data_end)
                 state_n = s_readReg_readData_1;
             else
-                state_n = state_c;
+                state_n = s_readReg_readData_0;
         end
         s_readReg_readData_1    : begin
             if(SPI_Data_end)
                 state_n = s_idle;
             else
-                state_n = state_c;
+                state_n = s_readReg_readData_1;
         end
 
         s_writeFIFO_getCNT_0    : begin
             if(SPI_Data_end)
                 state_n = s_writeFIFO_getCNT_1;
             else
-                state_n = state_c;
+                state_n = s_writeFIFO_getCNT_0;
         end
         s_writeFIFO_getCNT_1    : begin
             if(SPI_Data_end)
                 state_n = s_writeFIFO_writeData_0;
             else
-                state_n = state_c;
+                state_n = s_writeFIFO_getCNT_1;
         end
         s_writeFIFO_writeData_0 : begin
             if(SPI_Data_end)
                 state_n = s_writeFIFO_writeData_1;
             else
-                state_n = state_c;
+                state_n = s_writeFIFO_writeData_0;
         end
         s_writeFIFO_writeData_1 : begin
             if(SPI_Data_end)
@@ -246,26 +246,26 @@ always @(*) begin
                 else
                     state_n = s_writeFIFO_writeData_0;
             else
-                state_n = state_c;
+                state_n = s_writeFIFO_writeData_1;
         end
 
         s_readFIFO_getCNT_0     : begin
             if(SPI_Data_end)
                 state_n = s_readFIFO_getCNT_1;
             else
-                state_n = state_c;
+                state_n = s_readFIFO_getCNT_0;
         end
         s_readFIFO_getCNT_1     : begin
             if(SPI_Data_end)
                 state_n = s_readFIFO_readData_0;
             else
-                state_n = state_c;
+                state_n = s_readFIFO_getCNT_1;
         end
         s_readFIFO_readData_0   : begin
             if(SPI_Data_end)
                 state_n = s_readFIFO_readData_1;
             else
-                state_n = state_c;
+                state_n = s_readFIFO_readData_0;
         end
         s_readFIFO_readData_1   : begin
             if(SPI_Data_end)
@@ -274,26 +274,26 @@ always @(*) begin
                 else
                     state_n = s_readFIFO_readData_0;
             else
-                state_n = state_c;
+                state_n = s_readFIFO_readData_1;
         end
 
         s_writeRAM_getFirstAddr : begin
             if(SPI_Data_end)
                 state_n = s_writeRAM_getCNT_0;
             else
-                state_n = state_c;
+                state_n = s_writeRAM_getFirstAddr;
         end
         s_writeRAM_getCNT_0     : begin
             if(SPI_Data_end)
                 state_n = s_writeRAM_getCNT_1;
             else
-                state_n = state_c;
+                state_n = s_writeRAM_getCNT_0;
         end
         s_writeRAM_getCNT_1     : begin
             if(SPI_Data_end)
                 state_n = s_writeRAM_setAddr;
             else
-                state_n = state_c;
+                state_n = s_writeRAM_getCNT_1;
         end
         s_writeRAM_setAddr      : begin
             state_n = s_writeRAM_writeData_0;
@@ -302,7 +302,7 @@ always @(*) begin
             if(SPI_Data_end)
                 state_n = s_writeRAM_writeData_1;
             else
-                state_n = state_c;
+                state_n = s_writeRAM_writeData_0;
         end
         s_writeRAM_writeData_1  : begin
             if(SPI_Data_end)
@@ -311,26 +311,26 @@ always @(*) begin
                 else
                     state_n = s_writeRAM_setAddr;
             else
-                state_n = state_c;
+                state_n = s_writeRAM_writeData_1;
         end
 
         s_readRAM_getFirstAddr  : begin
             if(SPI_Data_end)
                 state_n = s_readRAM_getCNT_0;
             else
-                state_n = state_c;
+                state_n = s_readRAM_getFirstAddr;
         end
         s_readRAM_getCNT_0      : begin
             if(SPI_Data_end)
                 state_n = s_readRAM_getCNT_1;
             else
-                state_n = state_c;
+                state_n = s_readRAM_getCNT_0;
         end
         s_readRAM_getCNT_1      : begin
             if(SPI_Data_end)
                 state_n = s_readRAM_readData_0;
             else
-                state_n = state_c;
+                state_n = s_readRAM_getCNT_1;
         end
         s_readRAM_setAddr       : begin
             state_n = s_readRAM_readData_0;
@@ -339,7 +339,7 @@ always @(*) begin
             if(SPI_Data_end)
                 state_n = s_readRAM_readData_1;
             else
-                state_n = state_c;
+                state_n = s_readRAM_readData_0;
         end
         s_readRAM_readData_1    : begin
             if(SPI_Data_end)
@@ -348,7 +348,7 @@ always @(*) begin
                 else
                     state_n = s_readRAM_setAddr;
             else
-                state_n = state_c;
+                state_n = s_readRAM_readData_1;
         end
         default: state_n = s_idle;
     endcase
