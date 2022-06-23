@@ -145,4 +145,97 @@ dataCnt，16位，传输数据的长度。
 
 ### 5.2. 状态机设计
 
+采用三段式状态机，对于写操作使用时序逻辑，对于读操作使用组合逻辑。需要注意的是写操作的时序逻辑是以**现态**为准的。
+
+**disable 与 enable**
+
+```mermaid
+stateDiagram
+    s_idle      --> s_idle          
+    s_idle      --> s_opDect        : SPI_Data_begin
+
+    s_opDect    --> s_opDect        
+    s_opDect    --> s_disable       :SPI_Data_end
+
+    s_disable   --> s_idle
+```
+
+**write register 与 read register**
+
+```mermaid
+stateDiagram
+    s_idle      --> s_idle          
+    s_idle      --> s_opDect            : SPI_Data_begin
+
+    s_opDect    --> s_opDect       
+    s_opDect    --> s_writeReg_getAddr  : SPI_Data_end
+
+    s_writeReg_getAddr  --> s_writeReg_getAddr
+    s_writeReg_getAddr  --> s_writeReg_writeData_0  : SPI_Data_end
+
+    s_writeReg_writeData_0 --> s_writeReg_writeData_0
+    s_writeReg_writeData_0 --> s_writeReg_writeData_1   : SPI_Data_end
+
+    s_writeReg_writeData_1 --> s_writeReg_writeData_1
+    s_writeReg_writeData_1 --> s_idle   : SPI_Data_end
+```
+
+**write fifo 与 read fifo**
+
+```mermaid
+stateDiagram
+    s_idle      --> s_idle          
+    s_idle      --> s_opDect        : SPI_Data_begin
+
+    s_opDect    --> s_opDect
+    s_opDect    --> s_writeFIFO_getCNT_0 : SPI_Data_end
+
+    s_writeFIFO_getCNT_0 --> s_writeFIFO_getCNT_0
+    s_writeFIFO_getCNT_0 --> s_writeFIFO_getCNT_1 : SPI_Data_end
+
+    s_writeFIFO_getCNT_1 --> s_writeFIFO_getCNT_1
+    s_writeFIFO_getCNT_1 --> s_writeFIFO_writeData_0 : SPI_Data_end
+
+    s_writeFIFO_writeData_0 --> s_writeFIFO_writeData_0
+    s_writeFIFO_writeData_0 --> s_writeFIFO_writeData_1 : SPI_Data_end
+
+    s_writeFIFO_writeData_1 --> s_writeFIFO_writeData_1
+    s_writeFIFO_writeData_1 --> s_writeFIFO_writeData_0 : SPI_Data_end && (fsm_cnt != 1)
+    s_writeFIFO_writeData_1 --> s_idle                  : SPI_Data_end && (fsm_cnt == 1)
+```
+
+fsm_cnt是在**s_writeFIFO_writeData_1**状态才自减的，由于状态机输出中fsm_cnt是时序逻辑并且基于**现态**，所以在状态转移中现态根据fsm_cnt转移的下一拍自减才完成。总的来说，fsm_cnt代表本数据是需要传输的倒数第fsm_cnt个数据，所以状态转移时**fsm_cnt == 1**就代表本数据是最后一个了。
+
+**write ram 与 read ram**
+
+```mermaid
+stateDiagram
+    s_idle      --> s_idle          
+    s_idle      --> s_opDect        : SPI_Data_begin
+
+    s_opDect    --> s_opDect
+    s_opDect    --> s_writeRAM_getFirstAddr_0 : SPI_Data_end
+
+    s_writeRAM_getFirstAddr_0 --> s_writeRAM_getFirstAddr_0
+    s_writeRAM_getFirstAddr_0 --> s_writeRAM_getFirstAddr_1 : SPI_Data_end
+
+    s_writeRAM_getFirstAddr_1 --> s_writeRAM_getFirstAddr_1
+    s_writeRAM_getFirstAddr_1 --> s_writeRAM_getCNT_0 : SPI_Data_end
+
+    s_writeRAM_getCNT_0 --> s_writeRAM_getCNT_0
+    s_writeRAM_getCNT_0 --> s_writeRAM_getCNT_1 : SPI_Data_end
+
+    s_writeRAM_getCNT_1 --> s_writeRAM_getCNT_1
+    s_writeRAM_getCNT_1 --> s_writeRAM_setAddr : SPI_Data_end
+
+    s_writeRAM_setAddr --> s_writeRAM_writeData_0
+
+    s_writeRAM_writeData_0 --> s_writeRAM_writeData_0
+    s_writeRAM_writeData_0 --> s_writeRAM_writeData_1 : SPI_Data_end
+
+    s_writeRAM_writeData_1 --> s_writeRAM_writeData_1
+    s_writeRAM_writeData_1 --> s_writeRAM_setAddr   : SPI_Data_end && (fsm_cnt != 1)
+    s_writeRAM_writeData_1 --> s_idle               : SPI_Data_end && (fsm_cnt == 1)
+```
+
 ## 6. simpleDSP
