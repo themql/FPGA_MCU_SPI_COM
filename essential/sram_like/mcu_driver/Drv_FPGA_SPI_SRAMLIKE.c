@@ -41,7 +41,7 @@
     extern SPI_HandleTypeDef HSPI;
   #endif
 
-  void spi_send8(uint8_t data)
+  static void spi_send8(uint8_t data)
   {
   #if SIMU_SPI
     uint32_t i;
@@ -60,7 +60,7 @@
   #endif
   }
 
-  void spi_send16(uint16_t data)
+  static void spi_send16(uint16_t data)
   {
   #if SIMU_SPI
     uint32_t i;
@@ -79,7 +79,7 @@
   #endif
   }
 
-  void spi_send32(uint32_t data)
+  static void spi_send32(uint32_t data)
   {
   #if SIMU_SPI
     uint32_t i;
@@ -98,7 +98,7 @@
   #endif
   }
 
-  void spi_rece8(uint32_t *data)
+  static void spi_rece8(uint32_t *data)
   {
   #if SIMU_SPI
     uint32_t i;
@@ -118,7 +118,7 @@
   #endif
   }
 
-  void spi_rece16(uint32_t *data)
+  static void spi_rece16(uint32_t *data)
   {
   #if SIMU_SPI
     uint32_t i;
@@ -138,7 +138,7 @@
   #endif
   }
 
-  void spi_rece32(uint32_t *data)
+  static void spi_rece32(uint32_t *data)
   {
   #if SIMU_SPI
     uint32_t i;
