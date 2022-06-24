@@ -250,6 +250,7 @@ stateDiagram
 
 ## 7. todo
 
-1. 现在只进行了仿真，还未实际上板验真。mcu驱动也未测试。
-2. simpleDSP
-3. 再之后就是用SystemVerilog重构下，提高点代码质量。
+1. 将自定义指令中的16位数据都该用小端序，方便MCU端用指针进行访问。
+2. 现在只进行了仿真，还未实际上板验真。mcu驱动也未测试。
+3. simpleDSP
+4. 再之后就是用SystemVerilog重构下，提高点代码质量。
