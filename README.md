@@ -248,6 +248,68 @@ stateDiagram
 
 ## 6. simpleDSP
 
+画个饼先
+
+### 6.1. 结构框图
+
+![](README.assert/diagram_simpleDSP.png)
+
+### 6.2. 寄存器定义
+
+| 地址  | 读写  | 寄存器名      |
+| --- | --- | --------- |
+| 0   | RW  | ctrl[8:0] |
+
+* [0] en_sclkGen
+* [1] en_sample
+* [2] en_waveGen
+* [3:2] mode_sample
+  * 0：连续采样，仅输出到FIR
+  * 1：突发采样(1024点)，仅输出到RAM
+  * 2：突发采样(1024点)，仅输出到FIFO
+  * 3：突发采样(1024点)，仅输出到RAM与FIFO
+* [4] trig_sample： 置1触发一次采样(1024点)，采样结束自动置0
+* [5] trig_FFT：    置1触发一次转换(1024点)，转换结束自动置0
+* [6] trig_IFFT：   置1触发一次转换(1024点)，转换结束自动置0
+* [7] sel_FIR_WaveGen
+* [8] en_int：中断使能
+
+| 地址  | 读写  | 寄存器名       |
+| --- | --- | ---------- |
+| 1   | R   | state[2:0] |
+
+* [0] busy_sample
+* [1] busy_FFT
+* [2] busy_IFFT
+
+| 地址  | 读写  | 寄存器名              |
+| --- | --- | ----------------- |
+| 2   | R   | fifo_raw_rdata    |
+|     | W   | fifo_raw_wdata    |
+| 3   | W   | ram_raw_waddr     |
+| 4   | W   | ram_raw_raddr     |
+| 5   | R   | ram_raw_rdata     |
+|     | W   | ram_raw_wdata     |
+| 6   | W   | ram_wave_waddr    |
+| 7   | W   | ram_wave_raddr    |
+| 8   | R   | ram_wave_rdata    |
+|     | W   | ram_wave_wdata    |
+| 9   | W   | ram_fre_waddr     |
+| 10  | W   | ram_fre_raddr     |
+| 11  | R   | ram_fre_rdata     |
+|     | W   | ram_fre_wdata     |
+| 12  | W   | ram_FIRcoef_waddr |
+| 13  | W   | ram_FIRcoef_raddr |
+| 14  | R   | ram_FIRcoef_rdata |
+|     | W   | ram_FIRcoef_wdata |
+
+| 地址  | 读写  | 寄存器名                 |
+| --- | --- | -------------------- |
+| 15  | RW  | sclk_gen_coef[31:16] |
+| 16  | RW  | sclk_gen_coef[15:0]  |
+
+sclk_gen_soef：采样时钟生成系数，类似DDS频率控制字
+
 ## 7. todo
 
 1. 将自定义指令中的16位数据都该用小端序，方便MCU端用指针进行访问。
