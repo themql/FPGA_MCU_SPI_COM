@@ -258,21 +258,33 @@ stateDiagram
 
 | 地址  | 读写  | 寄存器名      |
 | --- | --- | --------- |
-| 0   | RW  | ctrl[8:0] |
+| 0   | RW  | ctrl[9:0] |
 
 * [0] en_sclkGen
 * [1] en_sample
 * [2] en_waveGen
-* [3:2] mode_sample
+* [3] en_FIR
+* [4] wen_sclkGen_coef
+  
+  系数写使能，写使能有效时对应模块失能（模块使能 = en_模块 & (~ wen_模块系数)）。
+* [5] wen_FIR_coef
+  
+  系数写使能，同上。
+* [7:6] mode_sample
   * 0：连续采样，仅输出到FIR
   * 1：突发采样(1024点)，仅输出到RAM
   * 2：突发采样(1024点)，仅输出到FIFO
   * 3：突发采样(1024点)，仅输出到RAM与FIFO
-* [4] trig_sample： 置1触发一次采样(1024点)，采样结束自动置0
-* [5] trig_FFT：    置1触发一次转换(1024点)，转换结束自动置0
-* [6] trig_IFFT：   置1触发一次转换(1024点)，转换结束自动置0
-* [7] sel_FIR_WaveGen
-* [8] en_int：中断使能
+* [8] sel_FIR_WaveGen
+* [9] en_int：中断使能
+
+| 地址  | 读写  | 寄存器名         |
+| --- | --- | ------------ |
+| 1   | W   | trigger[2:0] |
+
+* [0] trig_sample： 置1触发一次采样(1024点)，采样结束自动置0
+* [1] trig_FFT：    置1触发一次转换(1024点)，转换结束自动置0
+* [2] trig_IFFT：   置1触发一次转换(1024点)，转换结束自动置0
 
 | 地址  | 读写  | 寄存器名       |
 | --- | --- | ---------- |
@@ -282,37 +294,33 @@ stateDiagram
 * [1] busy_FFT
 * [2] busy_IFFT
 
-| 地址  | 读写  | 寄存器名              |
-| --- | --- | ----------------- |
-| 2   | R   | fifo_raw_rdata    |
-|     | W   | fifo_raw_wdata    |
-| 3   | W   | ram_raw_waddr     |
-| 4   | W   | ram_raw_raddr     |
-| 5   | R   | ram_raw_rdata     |
-|     | W   | ram_raw_wdata     |
-| 6   | W   | ram_wave_waddr    |
-| 7   | W   | ram_wave_raddr    |
-| 8   | R   | ram_wave_rdata    |
-|     | W   | ram_wave_wdata    |
-| 9   | W   | ram_fre_waddr     |
-| 10  | W   | ram_fre_raddr     |
-| 11  | R   | ram_fre_rdata     |
-|     | W   | ram_fre_wdata     |
-| 12  | W   | ram_FIRcoef_waddr |
-| 13  | W   | ram_FIRcoef_raddr |
-| 14  | R   | ram_FIRcoef_rdata |
-|     | W   | ram_FIRcoef_wdata |
+| 地址  | 读写  | 寄存器名            |
+| --- | --- | --------------- |
+| 2   | R   | fifo_wave_rdata |
+|     | W   | fifo_wave_wdata |
+| 3   | W   | ram_wave_waddr  |
+| 4   | W   | ram_wave_raddr  |
+| 5   | R   | ram_wave_rdata  |
+|     | W   | ram_wave_wdata  |
+| 6   | W   | ram_fre_waddr   |
+| 7   | W   | ram_fre_raddr   |
+| 8   | R   | ram_fre_rdata   |
+|     | W   | ram_fre_wdata   |
+| 9   | W   | FIRcoef_waddr   |
+| 10  | W   | FIRcoef_raddr   |
+| 11  | R   | FIRcoef_rdata   |
+|     | W   | FIRcoef_wdata   |
 
 | 地址  | 读写  | 寄存器名                 |
 | --- | --- | -------------------- |
-| 15  | RW  | sclk_gen_coef[31:16] |
-| 16  | RW  | sclk_gen_coef[15:0]  |
+| 12  | RW  | sclk_gen_coef[31:16] |
+| 13  | RW  | sclk_gen_coef[15:0]  |
 
-sclk_gen_soef：采样时钟生成系数，类似DDS频率控制字
+sclk_gen_coef：采样时钟生成系数，类似DDS频率控制字
 
 ## 7. todo
 
-1. 将自定义指令中的16位数据都该用小端序，方便MCU端用指针进行访问。
+1. 将自定义指令中的16位数据都改用小端序，方便MCU端用指针进行访问。
 2. 现在只进行了仿真，还未实际上板验真。mcu驱动也未测试。
 3. simpleDSP
 4. 再之后就是用SystemVerilog重构下，提高点代码质量。
