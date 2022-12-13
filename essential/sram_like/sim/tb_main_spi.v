@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
-module tb_main;
+module tb_main_spi;
 
 
-// design_main Inputs 
+// design_main_spi Inputs 
 reg   clk;
 reg   rst_n;
 reg   spi_scl;        
@@ -10,14 +10,15 @@ reg   spi_sdi;
 reg   spi_cs_addr;
 reg   spi_cs_data;
 
-// design_main Outputs
+// design_main_spi Outputs
 wire  spi_sdo;
 
-design_main #(
+design_main_spi #(
     .sim_present ( 1 ))
- u_design_main (
+ u_design_main_spi (
     .clk                     ( clk           ),
     .rst_n                   ( rst_n         ),
+
     .spi_scl                 ( spi_scl       ),
     .spi_sdi                 ( spi_sdi       ),
     .spi_cs_addr             ( spi_cs_addr   ),

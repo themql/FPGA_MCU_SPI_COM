@@ -1,4 +1,6 @@
+`define LittleEndian
 `define WIDTH   (8)
+
 // disable
 // | 0x00     |
 // enable
@@ -423,9 +425,15 @@ always @(posedge clk, negedge rst_n) begin
             s_writeReg_writeData_1  : begin
                 if(SPI_Data_end)
                     case (fsm_addr)
+`ifdef LittleEndian
+                        `REGADDR_num1   : rnum1 <= {SPI_Dout, fsm_data[15:8]};
+                        `REGADDR_num2   : rnum2 <= {SPI_Dout, fsm_data[15:8]};
+                        `REGADDR_num3   : rnum3 <= {SPI_Dout, fsm_data[15:8]};
+`else
                         `REGADDR_num1   : rnum1 <= {fsm_data[15:8], SPI_Dout};
                         `REGADDR_num2   : rnum2 <= {fsm_data[15:8], SPI_Dout};
                         `REGADDR_num3   : rnum3 <= {fsm_data[15:8], SPI_Dout};
+`endif
                         default         : ; 
                     endcase
             end
@@ -462,7 +470,11 @@ always @(posedge clk, negedge rst_n) begin
             s_writeFIFO_writeData_1 : begin
                 if(SPI_Data_end) begin
                     fifo_wreq   <= (fifo_wfull) ?1'b0 :1'b1;
+`ifdef LittleEndian                    
+                    fifo_wdata  <= {SPI_Dout, fsm_data[15:8]};
+`else
                     fifo_wdata  <= {fsm_data[15:8], SPI_Dout};
+`endif
                     fsm_cnt     <= fsm_cnt - 16'd1;
                 end
                 else begin
@@ -514,7 +526,11 @@ always @(posedge clk, negedge rst_n) begin
             s_writeRAM_writeData_1      : begin
                 if(SPI_Data_end) begin
                     ram_wreq    <= (fsm_addr >= RAM_SIZE) ?1'b0 :1'b1;
+`ifdef LittleEndian                    
+                    ram_wdata   <= {SPI_Dout, fsm_data[15:8]};
+`else
                     ram_wdata   <= {fsm_data[15:8], SPI_Dout};
+`endif
                     fsm_cnt     <= fsm_cnt - 16'd1;
                     fsm_addr    <= fsm_addr + 16'd1;
                 end
@@ -585,29 +601,53 @@ always @(*) begin
         case (state_c)
             s_readReg_readData_0    : begin
                 if(SPI_Data_begin)
+`ifdef LittleEndian
+                    SPI_Din = fsm_data[7:0];
+`else
                     SPI_Din = fsm_data[15:8];
+`endif
             end
             s_readReg_readData_1    : begin
                 if(SPI_Data_begin)
+`ifdef LittleEndian
+                    SPI_Din = fsm_data[15:8];
+`else
                     SPI_Din = fsm_data[7:0];
+`endif
             end
             s_readFIFO_readData_0   : begin
                 if(SPI_Data_begin)
+`ifdef LittleEndian
+                    SPI_Din = (fifo_rempty) ?8'd0 :fifo_rdata[7:0];
+`else
                     SPI_Din = (fifo_rempty) ?8'd0 :fifo_rdata[15:8];
+`endif
             end
             s_readFIFO_readData_1   : begin
                 if(SPI_Data_begin) begin
+`ifdef LittleEndian
+                    SPI_Din     = (fifo_rempty) ?8'd0 :fifo_rdata[15:8];
+`else
                     SPI_Din     = (fifo_rempty) ?8'd0 :fifo_rdata[7:0];
+`endif
                     fifo_rreq   = (fifo_rempty) ?1'b0 :1'b1;
                 end
             end
             s_readRAM_readData_0:   begin
                 if(SPI_Data_begin)
+`ifdef LittleEndian
+                    SPI_Din = (fsm_addr >= RAM_SIZE) ?8'd0 :ram_rdata[7:0];
+`else
                     SPI_Din = (fsm_addr >= RAM_SIZE) ?8'd0 :ram_rdata[15:8];
+`endif
             end
             s_readRAM_readData_1:   begin
                 if(SPI_Data_begin)
+`ifdef LittleEndian
+                    SPI_Din = (fsm_addr >= RAM_SIZE) ?8'd0 :ram_rdata[15:8];
+`else
                     SPI_Din = (fsm_addr >= RAM_SIZE) ?8'd0 :ram_rdata[7:0];
+`endif
             end
             default ;
         endcase

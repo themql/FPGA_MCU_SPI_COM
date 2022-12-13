@@ -1,5 +1,5 @@
 // SPI mode0 (Posedge sampling, Negedge load data)
-module SPI_DCS #(
+module SPI_DCS_if #(
     parameter width_addr = 8,
     parameter width_data = 16
 )
