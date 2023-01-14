@@ -12,6 +12,11 @@ module design_main #(
 );
 
 
+wire [7:0]  w_spiDin;
+wire [7:0]  w_spiDout;
+wire        w_spiData_begin;
+wire        w_spiData_end;
+
 wire [15:0] i_sum;
 wire [15:0] o_num1;
 wire [15:0] o_num2;
@@ -33,14 +38,38 @@ wire [7:0]      ram_raddr;
 wire [15:0]     ram_rdata;
 
 
-SPI_instPars_if u_SPI_instPars_if(
+SPI  #(
+    .width         (8)
+)
+u_SPI (
+    .clk           (clk),
+    .rst_n         (rst_n),
+    
+    .spi_scl       (spi_scl),
+    .spi_sdi       (spi_sdi),
+    .spi_sdo       (spi_sdo),
+    .spi_sel       (spi_sel),
+
+    .Din           (w_spiDin),
+    .Dout          (w_spiDout),
+    .Data_begin    (w_spiData_begin),
+    .Data_end      (w_spiData_end)
+);
+
+
+instPars #(
+    .spiWidth         (8),
+    .isLittleEndian   (0),
+    .RAM_SIZE         (256)
+) 
+u_instPars (
     .clk         (clk         ),
     .rst_n       (rst_n       ),
 
-    .spi_scl     (spi_scl     ),
-    .spi_sdi     (spi_sdi     ),
-    .spi_sdo     (spi_sdo     ),
-    .spi_sel     (spi_sel     ),
+    .Din         (w_spiDout),
+    .Dout        (w_spiDin),
+    .transBegin  (w_spiData_begin),
+    .transEnd    (w_spiData_end),
 
     .i_sum       (i_sum       ),
     .o_num1      (o_num1      ),

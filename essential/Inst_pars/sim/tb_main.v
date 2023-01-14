@@ -81,6 +81,7 @@ initial begin
     // en
     Buf_send[0] = 8'h01;
     #100 masterSendRece(1);
+    $write("Check out!!! The under tests are using bigEndian!\n");
     // test register
     $write("test register\n");
     for(i = 0; i < 10; i = i + 1) begin
@@ -148,7 +149,7 @@ initial begin
         if(r_rece == 1000 + i)
             ;
         else begin
-            $write("test%d failed, rece:%d\n", i, r_rece);
+            // $write("test%d failed, rece:%d\n", i, r_rece);
             flag_fifo_pass = 0;
         end
     end
@@ -157,7 +158,7 @@ initial begin
         if(r_rece == 16'd0)
             ;
         else begin
-            $write("test%d failed, rece:%d\n", i, r_rece);
+            // $write("test%d failed, rece:%d\n", i, r_rece);
             flag_fifo_pass = 0;
         end
     end
@@ -198,7 +199,7 @@ initial begin
         if(r_rece == 1000 + i)
             ;
         else begin
-            $write("test%d failed, rece:%d\n", i, r_rece);
+            // $write("test%d failed, rece:%d\n", i, r_rece);
             flag_ram_pass = 0;
         end
     end
@@ -207,7 +208,7 @@ initial begin
         if(r_rece == 16'd0)
             ;
         else begin
-            $write("test%d failed, rece:%d\n", i, r_rece);
+            // $write("test%d failed, rece:%d\n", i, r_rece);
             flag_ram_pass = 0;
         end
     end

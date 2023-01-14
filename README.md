@@ -114,6 +114,8 @@ fsmc采用SRAM传输协议，A模式（OE翻转，在配置中打开extended mod
 
 spi传输位宽为8位，FPGA中数据的位宽位为16位。SPI模块为标准4线SPI。
 
+多字节数据默认小端序（低字节在前）。（⚠但是testbench里需要设置成大端序）
+
 ### 5.1. 指令设计
 
 共设计了8条指令：
@@ -132,9 +134,7 @@ spi传输位宽为8位，FPGA中数据的位宽位为16位。SPI模块为标准4
 
 regAddr，内部数据寄存器编址。
 
-regData_0，16位数据的高8位。
-
-regData_1，16位数据的低8位。
+regData_0，regData_1，大小端序由parameter `isLittleEndian` 决定。
 
 | 指令描述       | 操作码（首字节） |           |           |         |         |     |         |         |
 | ---------- | -------- | --------- | --------- | ------- | ------- | --- | ------- | ------- |
@@ -154,113 +154,133 @@ dataCnt，16位，传输数据的长度。
 
 RAM读写，采用连续传输。
 
-firstAddr，16位，为数据的首地址。（ram大小其实仅为16位*256，8位够了，设计成16位是为了通用性强点，ram深度大点指令也可以兼容，但无疑是牺牲了效率的（其实也没牺牲多少，实际应用中时间没这么紧张吧👀））
+firstAddr，16位，为数据的首地址。（ram大小其实仅为16位*256，8位够了，设计成16位是为了通用性强点，ram深度大点指令也可以兼容，但无疑是牺牲了效率的（一般都无所谓👀））
 
 dataCnt，16位，传输数据的长度。
 
-从首地址开始顺序读写，当数据对应的地址超出RAM上限时，写入无效，读取为0。
+从首地址开始顺序读写，当数据对应的地址超出RAM上限时，写入无效，读取为0。（判断十分简陋，`fsm_addr_RAM >= RAM_SIZE` ，溢出什么的都没考虑）
 
 ### 5.2. 状态机设计
 
-* 三段式状态机
+* Moore型三段式状态机（状态很多😰）（原本采用Mealy型，状态是少点，但更加复杂，[点这里查看](https://github.com/themql/FPGA_MCU_SPI_COM/blob/83315b0b244c760d53b684feafe2f4033f946952/essential/Inst_pars/RTL/SPI_instPars_if.v)）
 
-* 状态机的转移全依据SPI模块的SPI_Data_begin与SPI_Data_end信号
+* 状态机的输入为SPI传输的开始与结束标志信号（例如：SPI_Data_begin与SPI_Data_end）
 
 ![](README.assert/state_intro.png)
 
-* 状态机的输出，由**现态**与SPI_Data_begin、SPI_Data_end信号共同决定。写操作使用时序逻辑，读操作使用组合逻辑。注意，写操作的时序逻辑是以**现态**为准的。
+* 状态命名一般为`s_操作码_状态_wait`与 `s_操作码_状态`，前者用于等待传输结束标志的到来，后者则在一个时钟内完成相应操作，然后进入下一个wait状态。
 
-* 状态设计的不太好，感觉太粗糙了。或许可以把状态细化到SPI_Data_X信号有效的时钟周期，状态与状态间设置成等待状态。如果有好想法，欢迎参与到仓库的建设中来😊。
+* 写操作使用时序逻辑，读操作使用组合逻辑。注意，写的时序逻辑和读的组合逻辑是以**次态**为准的，写逻辑是为了避免寄存器滞后一拍的影响，读逻辑则是因为SPI模块的读操作时序十分严格，如前所述，需要在`Data_begin`信号拉低前准备好数据，而`Data_begin`信号由只持续一拍。状态机中，是以`Data_begin` 为依据进入读取状态（为SPI模块提供数据的状态，`s_*_readData`），也就是说要在进入读取状态前就将数据准备好，所以要依赖次态。
 
-**disable 与 enable**
+* 本人觉得基于状态机进行解析还是太复杂了，可拓展性也不是很好，不如直接用软核。（写起来又累又要命，全是重复劳动，强烈推荐VSCode两个插件：better align与Increment Selection，当然还有vim的宏）当然如果您有好想法，欢迎向本仓库提交😊。
+
+#### 5.2.1. 状态跳转简单示意
+
+为简化，在后几幅示意图中：
+
+* 条件不满足时维持原状态的跳转不显示
+
+* wait状态不显示，以在对应状态后添加 **(wait)** 表示。
+
+##### disable 与 enable
 
 ```mermaid
-stateDiagram
+stateDiagram-v2
     s_idle      --> s_idle          
-    s_idle      --> s_opDect        : SPI_Data_begin
+    s_idle      --> s_opDect        :transBegin
 
     s_opDect    --> s_opDect        
-    s_opDect    --> s_disable       :SPI_Data_end
-
-    s_disable   --> s_idle
+    s_opDect    --> s_disable/s_enable       :transEnd
+    
+    s_disable/s_enable   --> s_idle
 ```
 
-**write register 与 read register**
+##### write register
 
 ```mermaid
-stateDiagram
-    s_idle      --> s_idle          
-    s_idle      --> s_opDect            : SPI_Data_begin
+stateDiagram-v2      
+    s_idle      --> s_opDect            : transBegin
 
-    s_opDect    --> s_opDect       
-    s_opDect    --> s_writeReg_getAddr  : SPI_Data_end
+    s_opDect    --> s_writeReg_getAddr_wait  : transEnd
 
-    s_writeReg_getAddr  --> s_writeReg_getAddr
-    s_writeReg_getAddr  --> s_writeReg_writeData_0  : SPI_Data_end
+    s_writeReg_getAddr_wait   --> s_writeReg_getAddr : transEnd
 
-    s_writeReg_writeData_0 --> s_writeReg_writeData_0
-    s_writeReg_writeData_0 --> s_writeReg_writeData_1   : SPI_Data_end
+    s_writeReg_getAddr  --> s_writeReg_writeData_0_wait
 
-    s_writeReg_writeData_1 --> s_writeReg_writeData_1
-    s_writeReg_writeData_1 --> s_idle   : SPI_Data_end
+    s_writeReg_writeData_0_wait --> s_writeReg_writeData_0 : transEnd
+
+    s_writeReg_writeData_0 --> s_writeReg_writeData_1_wait
+
+    s_writeReg_writeData_1_wait --> s_writeReg_writeData_1 : transEnd
+
+    s_writeReg_writeData_1 --> s_idle
 ```
 
-**write fifo 与 read fifo**
+##### read register
 
 ```mermaid
-stateDiagram
-    s_idle      --> s_idle          
-    s_idle      --> s_opDect        : SPI_Data_begin
+stateDiagram-v2
 
-    s_opDect    --> s_opDect
-    s_opDect    --> s_writeFIFO_getCNT_0 : SPI_Data_end
+s_idle --> s_opDect : transBegin
 
-    s_writeFIFO_getCNT_0 --> s_writeFIFO_getCNT_0
-    s_writeFIFO_getCNT_0 --> s_writeFIFO_getCNT_1 : SPI_Data_end
+s_opDect --> s_readReg_getAddr_wait : transEnd
 
-    s_writeFIFO_getCNT_1 --> s_writeFIFO_getCNT_1
-    s_writeFIFO_getCNT_1 --> s_writeFIFO_writeData_0 : SPI_Data_end
+s_readReg_getAddr_wait --> s_readReg_getAddr : transEnd
 
-    s_writeFIFO_writeData_0 --> s_writeFIFO_writeData_0
-    s_writeFIFO_writeData_0 --> s_writeFIFO_writeData_1 : SPI_Data_end
+s_readReg_getAddr --> s_readReg_readData_0 : transBegin
 
-    s_writeFIFO_writeData_1 --> s_writeFIFO_writeData_1
-    s_writeFIFO_writeData_1 --> s_writeFIFO_writeData_0 : SPI_Data_end && (fsm_cnt != 1)
-    s_writeFIFO_writeData_1 --> s_idle                  : SPI_Data_end && (fsm_cnt == 1)
+s_readReg_readData_0 --> s_readReg_readData_0_wait
+
+s_readReg_readData_0_wait --> s_readReg_readData_1 : transBegin
+
+s_readReg_readData_1 --> s_readReg_readData_1_wait
+
+s_readReg_readData_1_wait --> s_idle : transEnd
 ```
 
-fsm_cnt是在**s_writeFIFO_writeData_1**状态才自减的，由于状态机输出中fsm_cnt是时序逻辑并且基于**现态**，所以在状态转移中现态根据fsm_cnt转移的下一拍自减才完成。总的来说，fsm_cnt代表本数据是需要传输的倒数第fsm_cnt个数据，所以状态转移时**fsm_cnt == 1**就代表本数据是最后一个了。
-
-**write ram 与 read ram**
+##### write fifo 与 read fifo
 
 ```mermaid
-stateDiagram
-    s_idle      --> s_idle          
-    s_idle      --> s_opDect        : SPI_Data_begin
+stateDiagram-v2         
+    s_idle      --> s_opDect        : transBegin
 
-    s_opDect    --> s_opDect
-    s_opDect    --> s_writeRAM_getFirstAddr_0 : SPI_Data_end
+    s_opDect    --> s_writeFIFO_getCNT_0(wait) : transEnd
 
-    s_writeRAM_getFirstAddr_0 --> s_writeRAM_getFirstAddr_0
-    s_writeRAM_getFirstAddr_0 --> s_writeRAM_getFirstAddr_1 : SPI_Data_end
+    s_writeFIFO_getCNT_0(wait) --> s_writeFIFO_getCNT_1(wait) : transEnd
 
-    s_writeRAM_getFirstAddr_1 --> s_writeRAM_getFirstAddr_1
-    s_writeRAM_getFirstAddr_1 --> s_writeRAM_getCNT_0 : SPI_Data_end
+    s_writeFIFO_getCNT_1(wait) --> s_writeFIFO_decCNT : transEnd
 
-    s_writeRAM_getCNT_0 --> s_writeRAM_getCNT_0
-    s_writeRAM_getCNT_0 --> s_writeRAM_getCNT_1 : SPI_Data_end
+    s_writeFIFO_decCNT --> s_writeFIFO_writeData_0(wait)
 
-    s_writeRAM_getCNT_1 --> s_writeRAM_getCNT_1
-    s_writeRAM_getCNT_1 --> s_writeRAM_setAddr : SPI_Data_end
+    s_writeFIFO_writeData_0(wait) --> s_writeFIFO_writeData_1(wait) : transEnd
 
-    s_writeRAM_setAddr --> s_writeRAM_writeData_0
+    s_writeFIFO_writeData_1(wait) --> s_writeFIFO_decCNT : transEnd && (fsm_cnt != 0)
+    s_writeFIFO_writeData_1(wait) --> s_idle : transEnd && (fsm_cnt == 0)
+```
 
-    s_writeRAM_writeData_0 --> s_writeRAM_writeData_0
-    s_writeRAM_writeData_0 --> s_writeRAM_writeData_1 : SPI_Data_end
+##### write ram 与 read ram
 
-    s_writeRAM_writeData_1 --> s_writeRAM_writeData_1
-    s_writeRAM_writeData_1 --> s_writeRAM_setAddr   : SPI_Data_end && (fsm_cnt != 1)
-    s_writeRAM_writeData_1 --> s_idle               : SPI_Data_end && (fsm_cnt == 1)
+```mermaid
+stateDiagram        
+    s_idle      --> s_opDect        : transBegin
+
+    s_opDect    --> s_writeRAM_getFirstAddr_0(wait) : transEnd
+
+    s_writeRAM_getFirstAddr_0(wait) --> s_writeRAM_getFirstAddr_1(wait) : transEnd
+
+    s_writeRAM_getFirstAddr_1(wait) --> s_writeRAM_getCNT_0(wait) : transEnd
+
+    s_writeRAM_getCNT_0(wait) --> s_writeRAM_getCNT_1(wait) : transEnd
+
+    s_writeRAM_getCNT_1(wait) --> s_writeRAM_setAddrdecCNT : transEnd
+
+    s_writeRAM_setAddrdecCNT --> s_writeRAM_writeData_0(wait)
+
+    s_writeRAM_writeData_0(wait) --> s_writeRAM_writeData_1(wait) : transEnd
+
+    s_writeRAM_writeData_1(wait) --> s_writeRAM_setAddrdecCNT   : transEnd && (fsm_cnt != 0)
+    s_writeRAM_writeData_1(wait) --> s_idle               : transEnd && (fsm_cnt == 0)
+    note right of s_writeRAM_writeData_1(wait) : addr的自增在此完成
 ```
 
 ## 6. simpleDSP
@@ -278,21 +298,30 @@ stateDiagram
 | 0   | RW  | ctrl[9:0] |
 
 * [0] en_sclkGen
+
 * [1] en_sample
+
 * [2] en_waveGen
+
 * [3] en_FIR
+
 * [4] wen_sclkGen_coef
   
   系数写使能，写使能有效时对应模块失能（模块使能 = en_模块 & (~ wen_模块系数)）。
+
 * [5] wen_FIR_coef
   
   系数写使能，同上。
+
 * [7:6] mode_sample
+  
   * 0：连续采样，仅输出到FIR
   * 1：突发采样(1024点)，仅输出到RAM
   * 2：突发采样(1024点)，仅输出到FIFO
   * 3：突发采样(1024点)，仅输出到RAM与FIFO
+
 * [8] sel_FIR_WaveGen
+
 * [9] en_int：中断使能
 
 | 地址  | 读写  | 寄存器名         |
@@ -337,6 +366,5 @@ sclk_gen_coef：采样时钟生成系数，类似DDS频率控制字
 
 ## 7. todo
 
-1. 现在只进行了仿真，还未实际上板验真。mcu驱动也未测试。
-2. simpleDSP
-   
+1. 现在只进行了仿真，还未实际上板验真。mcu驱动也未测试。（所以仅供参考（逃）
+2. simpleDSP（有生之年，等 ~~22~~）
