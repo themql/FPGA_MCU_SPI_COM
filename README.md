@@ -170,7 +170,7 @@ dataCnt，16位，传输数据的长度。
 
 * 状态命名一般为`s_操作码_状态_wait`与 `s_操作码_状态`，前者用于等待传输结束标志的到来，后者则在一个时钟内完成相应操作，然后进入下一个wait状态。
 
-* 写操作使用时序逻辑，读操作使用组合逻辑。注意，写的时序逻辑和读的组合逻辑是以**次态**为准的，写逻辑是为了避免寄存器滞后一拍的影响，读逻辑则是因为SPI模块的读操作时序十分严格，如前所述，需要在`Data_begin`信号拉低前准备好数据，而`Data_begin`信号由只持续一拍。状态机中，是以`Data_begin` 为依据进入读取状态（为SPI模块提供数据的状态，`s_*_readData`），也就是说要在进入读取状态前就将数据准备好，所以要依赖次态。
+* 写操作使用时序逻辑，读操作使用组合逻辑。注意，写的时序逻辑和读的组合逻辑是以**次态**为准的，写逻辑是为了避免寄存器滞后一拍的影响，读逻辑则是因为SPI模块的读操作时序十分严格，如前所述，需要在`Data_begin`信号拉低前准备好数据，而`Data_begin`信号由只持续一拍。状态机中，是以`Data_begin` 为依据进入读取状态（为SPI模块提供数据的状态，`s_*_readData`），也就是说要在进入读取状态前就将数据准备好，所以要依赖次态。（在最近的提交中，SPI模块的 `Data_begin` 信号已改为持续2周期，读组合逻辑基于现态也可行）
 
 * 本人觉得基于状态机进行解析还是太复杂了，可拓展性也不是很好，不如直接用软核。（写起来又累又要命，全是重复劳动，强烈推荐VSCode两个插件：better align与Increment Selection，当然还有vim的宏）当然如果您有好想法，欢迎向本仓库提交😊。
 
@@ -244,19 +244,21 @@ s_readReg_readData_1_wait --> s_idle : transEnd
 stateDiagram-v2         
     s_idle      --> s_opDect        : transBegin
 
-    s_opDect    --> s_writeFIFO_getCNT_0(wait) : transEnd
+    s_opDect    --> s_writeFIFO_getCNT_0/1(wait) : transEnd
 
-    s_writeFIFO_getCNT_0(wait) --> s_writeFIFO_getCNT_1(wait) : transEnd
+    s_writeFIFO_getCNT_0/1(wait) --> s_writeFIFO_keepWrite : transEnd
 
-    s_writeFIFO_getCNT_1(wait) --> s_writeFIFO_decCNT : transEnd
-
-    s_writeFIFO_decCNT --> s_writeFIFO_writeData_0(wait)
+    s_writeFIFO_keepWrite --> s_writeFIFO_writeData_0(wait)
 
     s_writeFIFO_writeData_0(wait) --> s_writeFIFO_writeData_1(wait) : transEnd
 
-    s_writeFIFO_writeData_1(wait) --> s_writeFIFO_decCNT : transEnd && (fsm_cnt != 0)
-    s_writeFIFO_writeData_1(wait) --> s_idle : transEnd && (fsm_cnt == 0)
+    s_writeFIFO_writeData_1(wait) --> s_writeFIFO_updateAndBranch : transEnd
+
+    s_writeFIFO_updateAndBranch --> s_writeFIFO_keepWrite : transEnd && (fsm_cnt != 0)
+    s_writeFIFO_updateAndBranch --> s_idle : transEnd && (fsm_cnt == 0)
 ```
+
+`fsm_cnt_FIFO` 的自减由基于次态的时序逻辑实现，现态跳转到 `s_writeFIFO_updateAndBranch` 时其值已近完成自减，即**先自减再判断**，所以值变为0时说明所以数据已传输完成。
 
 ##### write ram 与 read ram
 
@@ -264,23 +266,20 @@ stateDiagram-v2
 stateDiagram        
     s_idle      --> s_opDect        : transBegin
 
-    s_opDect    --> s_writeRAM_getFirstAddr_0(wait) : transEnd
+    s_opDect    --> s_writeRAM_getFirstAddr_0/1(wait) : transEnd
 
-    s_writeRAM_getFirstAddr_0(wait) --> s_writeRAM_getFirstAddr_1(wait) : transEnd
+    s_writeRAM_getFirstAddr_0/1(wait) --> s_writeRAM_getCNT_0/1(wait) : transEnd
 
-    s_writeRAM_getFirstAddr_1(wait) --> s_writeRAM_getCNT_0(wait) : transEnd
+    s_writeRAM_getCNT_0/1(wait) --> s_writeRAM_setAddr : transEnd
 
-    s_writeRAM_getCNT_0(wait) --> s_writeRAM_getCNT_1(wait) : transEnd
-
-    s_writeRAM_getCNT_1(wait) --> s_writeRAM_setAddrdecCNT : transEnd
-
-    s_writeRAM_setAddrdecCNT --> s_writeRAM_writeData_0(wait)
+    s_writeRAM_setAddr --> s_writeRAM_writeData_0(wait)
 
     s_writeRAM_writeData_0(wait) --> s_writeRAM_writeData_1(wait) : transEnd
 
-    s_writeRAM_writeData_1(wait) --> s_writeRAM_setAddrdecCNT   : transEnd && (fsm_cnt != 0)
-    s_writeRAM_writeData_1(wait) --> s_idle               : transEnd && (fsm_cnt == 0)
-    note right of s_writeRAM_writeData_1(wait) : addr的自增在此完成
+    s_writeRAM_writeData_1(wait) --> s_writeRAM_updateAndBranch : transEnd
+
+    s_writeRAM_updateAndBranch  --> s_writeRAM_setAddr   : transEnd && (fsm_cnt != 0)
+    s_writeRAM_updateAndBranch  --> s_idle               : transEnd && (fsm_cnt == 0)
 ```
 
 ## 6. simpleDSP

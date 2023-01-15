@@ -119,7 +119,7 @@ initial begin
         end
     end
     $write("\n");
-
+#100000;
     // test fifo
     $write("test fifo\n");
     r_rece = 16'd0;
@@ -144,28 +144,28 @@ initial begin
     end
     #5000 masterSendRece(603);
 
-    for (i = 0; i < 256; i = i + 1) begin
+    for (i = 0; (i < 256) && flag_fifo_pass; i = i + 1) begin
         r_rece = {Buf_rece[3+i*2], Buf_rece[4+i*2]};
         if(r_rece == 1000 + i)
             ;
         else begin
-            // $write("test%d failed, rece:%d\n", i, r_rece);
+            $write("test%d failed, rece:%d\n", i, r_rece);
             flag_fifo_pass = 0;
         end
     end
-    for (i = 256; i < 300; i = i + 1) begin
+    for (i = 256; (i < 300) && flag_fifo_pass; i = i + 1) begin
         r_rece = {Buf_rece[3+i*2], Buf_rece[4+i*2]};
         if(r_rece == 16'd0)
             ;
         else begin
-            // $write("test%d failed, rece:%d\n", i, r_rece);
+            $write("test%d failed, rece:%d\n", i, r_rece);
             flag_fifo_pass = 0;
         end
     end
     if(flag_fifo_pass)
         $write("FIFO test pass!\n");
     $write("\n");
-
+#100000;
     // test ram
     $write("test ram\n");
     r_rece = 16'd0;
@@ -194,21 +194,21 @@ initial begin
     end
     #5000 masterSendRece(605);
 
-    for (i = 0; i < 256; i = i + 1) begin
+    for (i = 0; (i < 256) && flag_fifo_pass; i = i + 1) begin
         r_rece = {Buf_rece[5+i*2], Buf_rece[6+i*2]};
         if(r_rece == 1000 + i)
             ;
         else begin
-            // $write("test%d failed, rece:%d\n", i, r_rece);
+            $write("test%d failed, rece:%d\n", i, r_rece);
             flag_ram_pass = 0;
         end
     end
-    for (i = 256; i < 300; i = i + 1) begin
+    for (i = 256; (i < 300) && flag_fifo_pass; i = i + 1) begin
         r_rece = {Buf_rece[5+i*2], Buf_rece[6+i*2]};
         if(r_rece == 16'd0)
             ;
         else begin
-            // $write("test%d failed, rece:%d\n", i, r_rece);
+            $write("test%d failed, rece:%d\n", i, r_rece);
             flag_ram_pass = 0;
         end
     end

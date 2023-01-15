@@ -114,46 +114,50 @@ localparam s_idle                         = 0,
            s_writeFIFO_getCNT_0           = 17,
            s_writeFIFO_getCNT_1_wait      = 18,
            s_writeFIFO_getCNT_1           = 19,
-           s_writeFIFO_decCNT             = 20,
+           s_writeFIFO_keepWrite          = 20,
            s_writeFIFO_writeData_0_wait   = 21,
            s_writeFIFO_writeData_0        = 22,
            s_writeFIFO_writeData_1_wait   = 23,
            s_writeFIFO_writeData_1        = 24,
-           s_readFIFO_getCNT_0_wait       = 25,
-           s_readFIFO_getCNT_0            = 26,
-           s_readFIFO_getCNT_1_wait       = 27,
-           s_readFIFO_getCNT_1            = 28,
-           s_readFIFO_decCNT              = 29,
-           s_readFIFO_readData_0          = 30,
-           s_readFIFO_readData_0_wait     = 31,
-           s_readFIFO_readData_1          = 32,
-           s_readFIFO_readData_1_wait     = 33,
-           s_writeRAM_getFirstAddr_0_wait = 34,
-           s_writeRAM_getFirstAddr_0      = 35,
-           s_writeRAM_getFirstAddr_1_wait = 36,
-           s_writeRAM_getFirstAddr_1      = 37,
-           s_writeRAM_getCNT_0_wait       = 38,
-           s_writeRAM_getCNT_0            = 39,
-           s_writeRAM_getCNT_1_wait       = 40,
-           s_writeRAM_getCNT_1            = 41,
-           s_writeRAM_setAddrdecCNT       = 42,
-           s_writeRAM_writeData_0_wait    = 43,
-           s_writeRAM_writeData_0         = 44,
-           s_writeRAM_writeData_1_wait    = 45,
-           s_writeRAM_writeData_1         = 46,
-           s_readRAM_getFirstAddr_0_wait  = 47,
-           s_readRAM_getFirstAddr_0       = 48,
-           s_readRAM_getFirstAddr_1_wait  = 49,
-           s_readRAM_getFirstAddr_1       = 50,
-           s_readRAM_getCNT_0_wait        = 51,
-           s_readRAM_getCNT_0             = 52,
-           s_readRAM_getCNT_1_wait        = 53,
-           s_readRAM_getCNT_1             = 54,
-           s_readRAM_setAddrdecCNT        = 55,
-           s_readRAM_readData_0           = 56,
-           s_readRAM_readData_0_wait      = 57,
-           s_readRAM_readData_1           = 58,
-           s_readRAM_readData_1_wait      = 59;
+           s_writeFIFO_updateAndBranch    = 25,
+           s_readFIFO_getCNT_0_wait       = 26,
+           s_readFIFO_getCNT_0            = 27,
+           s_readFIFO_getCNT_1_wait       = 28,
+           s_readFIFO_getCNT_1            = 29,
+           s_readFIFO_keepRead            = 30,
+           s_readFIFO_readData_0          = 31,
+           s_readFIFO_readData_0_wait     = 32,
+           s_readFIFO_readData_1          = 33,
+           s_readFIFO_readData_1_wait     = 34,
+           s_readFIFO_updateAndBranch     = 35,
+           s_writeRAM_getFirstAddr_0_wait = 36,
+           s_writeRAM_getFirstAddr_0      = 37,
+           s_writeRAM_getFirstAddr_1_wait = 38,
+           s_writeRAM_getFirstAddr_1      = 39,
+           s_writeRAM_getCNT_0_wait       = 40,
+           s_writeRAM_getCNT_0            = 41,
+           s_writeRAM_getCNT_1_wait       = 42,
+           s_writeRAM_getCNT_1            = 43,
+           s_writeRAM_setAddr             = 44,
+           s_writeRAM_writeData_0_wait    = 45,
+           s_writeRAM_writeData_0         = 46,
+           s_writeRAM_writeData_1_wait    = 47,
+           s_writeRAM_writeData_1         = 48,
+           s_writeRAM_updateAndBranch     = 49,
+           s_readRAM_getFirstAddr_0_wait  = 50,
+           s_readRAM_getFirstAddr_0       = 51,
+           s_readRAM_getFirstAddr_1_wait  = 52,
+           s_readRAM_getFirstAddr_1       = 53,
+           s_readRAM_getCNT_0_wait        = 54,
+           s_readRAM_getCNT_0             = 55,
+           s_readRAM_getCNT_1_wait        = 56,
+           s_readRAM_getCNT_1             = 57,
+           s_readRAM_setAddr              = 58,
+           s_readRAM_readData_0           = 59,
+           s_readRAM_readData_0_wait      = 60,
+           s_readRAM_readData_1           = 61,
+           s_readRAM_readData_1_wait      = 62,
+           s_readRAM_updateAndBranch      = 63;
 
 // 
 always @(posedge clk, negedge rst_n) begin
@@ -229,8 +233,8 @@ always @(*) begin
             if(transEnd)
                 staten = s_writeFIFO_getCNT_1;
         s_writeFIFO_getCNT_1:
-            staten = s_writeFIFO_decCNT;
-        s_writeFIFO_decCNT:
+            staten = s_writeFIFO_keepWrite;
+        s_writeFIFO_keepWrite:
             staten = s_writeFIFO_writeData_0_wait;
         s_writeFIFO_writeData_0_wait:
             if(transEnd)
@@ -241,10 +245,12 @@ always @(*) begin
             if(transEnd)
                 staten = s_writeFIFO_writeData_1;
         s_writeFIFO_writeData_1:
+            staten = s_writeFIFO_updateAndBranch;
+        s_writeFIFO_updateAndBranch:
             if(fsm_cnt_FIFO == 'd0)
                 staten = s_idle;
             else
-                staten = s_writeFIFO_decCNT;
+                staten = s_writeFIFO_keepWrite;
 
         s_readFIFO_getCNT_0_wait:
             if(transEnd)
@@ -255,8 +261,8 @@ always @(*) begin
             if(transEnd)
                 staten = s_readFIFO_getCNT_1;
         s_readFIFO_getCNT_1:
-            staten = s_readFIFO_decCNT;
-        s_readFIFO_decCNT:
+            staten = s_readFIFO_keepRead;
+        s_readFIFO_keepRead:
             if(transBegin)
                 staten = s_readFIFO_readData_0;
         s_readFIFO_readData_0:
@@ -268,10 +274,12 @@ always @(*) begin
             staten = s_readFIFO_readData_1_wait;
         s_readFIFO_readData_1_wait:
             if(transEnd)
-                if(fsm_cnt_FIFO == 'd0)
-                    staten = s_idle;
-                else
-                    staten = s_readFIFO_decCNT;
+                staten = s_readFIFO_updateAndBranch;
+        s_readFIFO_updateAndBranch:
+            if(fsm_cnt_FIFO == 'd0)
+                staten = s_idle;
+            else
+                staten = s_readFIFO_keepRead;
 
         s_writeRAM_getFirstAddr_0_wait:
             if(transEnd)
@@ -292,8 +300,8 @@ always @(*) begin
             if(transEnd)
                 staten = s_writeRAM_getCNT_1;
         s_writeRAM_getCNT_1:
-            staten = s_writeRAM_setAddrdecCNT;
-        s_writeRAM_setAddrdecCNT:
+            staten = s_writeRAM_setAddr;
+        s_writeRAM_setAddr:
             staten = s_writeRAM_writeData_0_wait;
         s_writeRAM_writeData_0_wait:
             if(transEnd)
@@ -304,10 +312,12 @@ always @(*) begin
             if(transEnd)
                 staten = s_writeRAM_writeData_1;
         s_writeRAM_writeData_1:
+            staten = s_writeRAM_updateAndBranch;
+        s_writeRAM_updateAndBranch:
             if(fsm_cnt_RAM == 'd0)
                 staten = s_idle;
             else
-                staten = s_writeRAM_setAddrdecCNT;
+                staten = s_writeRAM_setAddr;
 
         s_readRAM_getFirstAddr_0_wait:
             if(transEnd)
@@ -328,22 +338,25 @@ always @(*) begin
             if(transEnd)
                 staten = s_readRAM_getCNT_1;
         s_readRAM_getCNT_1:
-            staten = s_readRAM_setAddrdecCNT;
-        s_readRAM_setAddrdecCNT:
-            staten = s_readRAM_readData_0_wait;
-        s_readRAM_readData_0_wait:
-            if(transEnd)
+            staten = s_readRAM_setAddr;
+        s_readRAM_setAddr:
+            if(transBegin)
                 staten = s_readRAM_readData_0;
         s_readRAM_readData_0:
+            staten = s_readRAM_readData_0_wait;
+        s_readRAM_readData_0_wait:
+            if(transBegin)
+                staten = s_readRAM_readData_1;
+        s_readRAM_readData_1:
             staten = s_readRAM_readData_1_wait;
         s_readRAM_readData_1_wait:
             if(transEnd)
-                staten = s_readRAM_readData_1;
-        s_readRAM_readData_1:
+                staten = s_readRAM_updateAndBranch;
+        s_readRAM_updateAndBranch:
             if(fsm_cnt_RAM == 'd0)
                 staten = s_idle;
             else
-                staten = s_readRAM_setAddrdecCNT;
+                staten = s_readRAM_setAddr;
 
         default:
             // staten = s_idle;
@@ -461,8 +474,8 @@ always @(posedge clk, negedge rst_n) begin
         else
             fsm_cnt_FIFO <= {fsm_cnt_FIFO[15:8], Din};
     else if(
-        (staten == s_writeFIFO_decCNT)||
-        (staten == s_readFIFO_decCNT)
+        (staten == s_writeFIFO_updateAndBranch)||
+        (staten == s_readFIFO_updateAndBranch)
     )
         fsm_cnt_FIFO <= fsm_cnt_FIFO - 'd1;
     else
@@ -514,12 +527,8 @@ always @(posedge clk, negedge rst_n) begin
         else
             fsm_addr_RAM <= {fsm_addr_RAM[15:8], Din};
     else if(
-        (staten == s_writeRAM_setAddrdecCNT)||
-        (staten == s_readRAM_setAddrdecCNT)
-    );
-    else if(
-        (staten == s_writeRAM_writeData_1)||
-        (staten == s_readRAM_readData_1)
+        (staten == s_writeRAM_updateAndBranch)||
+        (staten == s_readRAM_updateAndBranch)
     )
         fsm_addr_RAM <= fsm_addr_RAM + 'd1;
     else
@@ -559,8 +568,8 @@ always @(posedge clk, negedge rst_n) begin
         else
             fsm_cnt_RAM <= {fsm_cnt_RAM[15:8], Din};
     else if(
-        (staten == s_writeRAM_setAddrdecCNT)||
-        (staten == s_readRAM_setAddrdecCNT)
+        (staten == s_writeRAM_updateAndBranch)||
+        (staten == s_readRAM_updateAndBranch)
     )
         fsm_cnt_RAM <= fsm_cnt_RAM - 'd1;
     else
@@ -576,9 +585,9 @@ always @(posedge clk, negedge rst_n) begin
         ram_waddr <= 8'd0;
         ram_raddr <= 8'd0;
     end
-    else if(staten == s_writeRAM_setAddrdecCNT)
+    else if(staten == s_writeRAM_setAddr)
         ram_waddr <= fsm_addr_RAM[7:0];
-    else if(staten == s_readRAM_setAddrdecCNT)
+    else if(staten == s_readRAM_setAddr)
         ram_raddr <= fsm_addr_RAM[7:0];
     else begin
         ram_waddr <= ram_waddr;
