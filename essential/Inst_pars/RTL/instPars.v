@@ -617,38 +617,41 @@ end
 always @(*) begin
     if(!rst_n)
         Dout = {spiWidth{1'd0}};
-    else if(staten == s_readReg_readData_0)
-        if(isLittleEndian)
-            Dout = fsm_dataHold_reg[7:0];
-        else
-            Dout = fsm_dataHold_reg[15:8];
-    else if(staten == s_readReg_readData_1)
-        if(isLittleEndian)
-            Dout = fsm_dataHold_reg[15:8];
-        else
-            Dout = fsm_dataHold_reg[7:0];
-    else if(staten == s_readFIFO_readData_0)
-        if(isLittleEndian)
-            Dout = (fifo_rempty) ?8'd0 :fifo_rdata[7:0];
-        else
-            Dout = (fifo_rempty) ?8'd0 :fifo_rdata[15:8];
-    else if(staten == s_readFIFO_readData_1)
-        if(isLittleEndian)
-            Dout = (fifo_rempty) ?8'd0 :fifo_rdata[15:8];
-        else
-            Dout = (fifo_rempty) ?8'd0 :fifo_rdata[7:0];
-    else if(staten == s_readRAM_readData_0)
-        if(isLittleEndian)
-            Dout = (fsm_addr_RAM >= RAM_SIZE) ?8'd0 :ram_rdata[7:0];
-        else
-            Dout = (fsm_addr_RAM >= RAM_SIZE) ?8'd0 :ram_rdata[15:8];
-    else if(staten == s_readRAM_readData_1)
-        if(isLittleEndian)
-            Dout = (fsm_addr_RAM >= RAM_SIZE) ?8'd0 :ram_rdata[15:8];
-        else
-            Dout = (fsm_addr_RAM >= RAM_SIZE) ?8'd0 :ram_rdata[7:0];
     else
-        Dout = {spiWidth{1'd0}};
-end
+        case (staten)
+            s_readReg_readData_0: 
+                if(isLittleEndian)
+                    Dout = fsm_dataHold_reg[7:0];
+                else
+                    Dout = fsm_dataHold_reg[15:8];
+            s_readReg_readData_1:
+                if(isLittleEndian)
+                    Dout = fsm_dataHold_reg[15:8];
+                else
+                    Dout = fsm_dataHold_reg[7:0];
+            s_readFIFO_readData_0:
+                if(isLittleEndian)
+                    Dout = (fifo_rempty) ?8'd0 :fifo_rdata[7:0];
+                else
+                    Dout = (fifo_rempty) ?8'd0 :fifo_rdata[15:8];
+            s_readFIFO_readData_1:
+                if(isLittleEndian)
+                    Dout = (fifo_rempty) ?8'd0 :fifo_rdata[15:8];
+                else
+                    Dout = (fifo_rempty) ?8'd0 :fifo_rdata[7:0];
+            s_readRAM_readData_0:
+                if(isLittleEndian)
+                    Dout = (fsm_addr_RAM >= RAM_SIZE) ?8'd0 :ram_rdata[7:0];
+                else
+                    Dout = (fsm_addr_RAM >= RAM_SIZE) ?8'd0 :ram_rdata[15:8];
+            s_readRAM_readData_1:
+                if(isLittleEndian)
+                    Dout = (fsm_addr_RAM >= RAM_SIZE) ?8'd0 :ram_rdata[15:8];
+                else
+                    Dout = (fsm_addr_RAM >= RAM_SIZE) ?8'd0 :ram_rdata[7:0];
+            default: 
+                Dout = {spiWidth{1'd0}};
+        endcase
+end       
 
 endmodule
