@@ -103,68 +103,115 @@ void FPGA_SPI_enable()
 
 void FPGA_SPI_writeReg(uint8_t regAddr, uint16_t regData)
 {
+  union Data16 trans;
+
   FPGA_SPI_Buf_Send[0] = 0x02;
   FPGA_SPI_Buf_Send[1] = regAddr;
-  FPGA_SPI_Buf_Send[2] = (uint8_t)(regData >> 8);
-  FPGA_SPI_Buf_Send[3] = (uint8_t)(regData & 0x00FF);
+  trans.data = regData;
+  FPGA_SPI_Buf_Send[2] = trans.Bytes[0];
+  FPGA_SPI_Buf_Send[3] = trans.Bytes[1];
   spi_SendRece(FPGA_SPI_Buf_Send, FPGA_SPI_Buf_Rece, 4);
 }
 
-void FPGA_SPI_readReg(uint8_t regAddr)
+uint16_t FPGA_SPI_readReg(uint8_t regAddr)
 {
+  union Data16 trans;
+
   FPGA_SPI_Buf_Send[0] = 0x03;
   FPGA_SPI_Buf_Send[1] = regAddr;
   FPGA_SPI_Buf_Send[2] = 0x00;
   FPGA_SPI_Buf_Send[3] = 0x00;
   spi_SendRece(FPGA_SPI_Buf_Send, FPGA_SPI_Buf_Rece, 4);
+  trans.Bytes[0] = FPGA_SPI_Buf_Rece[REG_DATA_OFFSET+0];
+  trans.Bytes[1] = FPGA_SPI_Buf_Rece[REG_DATA_OFFSET+1];
+
+  return trans.data;
 }
 
-void FPGA_SPI_writeFIFO(uint16_t dataCnt)
-{
-  FPGA_SPI_Buf_Send[0] = 0x04;
-  FPGA_SPI_Buf_Send[1] = (uint8_t)(dataCnt >> 8);
-  FPGA_SPI_Buf_Send[2] = (uint8_t)(dataCnt & 0x00FF);
-  spi_SendRece(FPGA_SPI_Buf_Send, FPGA_SPI_Buf_Rece, 3 + dataCnt * 2);
-}
-
-void FPGA_SPI_readFIFO(uint16_t dataCnt)
+void FPGA_SPI_writeFIFO(uint16_t dataCnt, uint16_t* dataSrc)
 {
   uint32_t i;
+  union Data16 trans;
+  uint16_t* pBuf16;
+
+  FPGA_SPI_Buf_Send[0] = 0x04;
+  trans.data = dataCnt;
+  FPGA_SPI_Buf_Send[1] = trans.Bytes[0];
+  FPGA_SPI_Buf_Send[2] = trans.Bytes[1];
+  pBuf16 = FPGA_SPI_Buf_Send + FIFO_DATA_OFFSET;
+  for(i = 0; i < dataCnt; ++i)
+  {
+    pBuf16[i] = dataSrc[i];
+  }
+  spi_SendRece(FPGA_SPI_Buf_Send, FPGA_SPI_Buf_Rece, FIFO_DATA_OFFSET + dataCnt * 2);
+}
+
+void FPGA_SPI_readFIFO(uint16_t dataCnt, uint16_t* dataDes)
+{
+  uint32_t i;
+  union Data16 trans;
+  uint16_t* pBuf16;
 
   FPGA_SPI_Buf_Send[0] = 0x05;
-  FPGA_SPI_Buf_Send[1] = (uint8_t)(dataCnt >> 8);
-  FPGA_SPI_Buf_Send[2] = (uint8_t)(dataCnt & 0x00FF);
+  trans.data = dataCnt;
+  FPGA_SPI_Buf_Send[1] = trans.Bytes[0];
+  FPGA_SPI_Buf_Send[2] = trans.Bytes[1];
+  pBuf16 = FPGA_SPI_Buf_Send + FIFO_DATA_OFFSET;
   for(i = 0; i < dataCnt; ++i)
   {
-    FPGA_SPI_Buf_Send[FIFOData_BeginAddr + 0 + i * 2] = 0x00;
-    FPGA_SPI_Buf_Send[FIFOData_BeginAddr + 1 + i * 2] = 0x00;
+    pBuf16[i] = 0;
   }
-  spi_SendRece(FPGA_SPI_Buf_Send, FPGA_SPI_Buf_Rece, 3 + dataCnt * 2);
+  spi_SendRece(FPGA_SPI_Buf_Send, FPGA_SPI_Buf_Rece, FIFO_DATA_OFFSET + dataCnt * 2);
+  pBuf16 = FPGA_SPI_Buf_Rece + FIFO_DATA_OFFSET;
+  for(i = 0; i < dataCnt; ++i)
+  {
+    dataDes[i] = pBuf16[i];
+  }
 }
 
-void FPGA_SPI_writeRAM(uint16_t firstAddr, uint16_t dataCnt)
-{
-  FPGA_SPI_Buf_Send[0] = 0x06;
-  FPGA_SPI_Buf_Send[1] = (uint8_t)(firstAddr >> 8);
-  FPGA_SPI_Buf_Send[2] = (uint8_t)(firstAddr & 0x00FF);
-  FPGA_SPI_Buf_Send[3] = (uint8_t)(dataCnt >> 8);
-  FPGA_SPI_Buf_Send[4] = (uint8_t)(dataCnt & 0x00FF);
-  spi_SendRece(FPGA_SPI_Buf_Send, FPGA_SPI_Buf_Rece, 5 + dataCnt * 2);
-}
-
-void FPGA_SPI_readRAM(uint16_t firstAddr, uint16_t dataCnt)
+void FPGA_SPI_writeRAM(uint16_t firstAddr, uint16_t dataCnt, uint16_t* dataSrc)
 {
   uint32_t i;
+  union Data16 trans;
+  uint16_t* pBuf16;
 
-  FPGA_SPI_Buf_Send[0] = 0x07;
-  FPGA_SPI_Buf_Send[1] = (uint8_t)(firstAddr >> 8);
-  FPGA_SPI_Buf_Send[2] = (uint8_t)(firstAddr & 0x00FF);
-  FPGA_SPI_Buf_Send[3] = (uint8_t)(dataCnt >> 8);
-  FPGA_SPI_Buf_Send[4] = (uint8_t)(dataCnt & 0x00FF);
+  FPGA_SPI_Buf_Send[0] = 0x06;
+  trans.data = firstAddr;
+  FPGA_SPI_Buf_Send[1] = trans.Bytes[0];
+  FPGA_SPI_Buf_Send[2] = trans.Bytes[1];
+  trans.data = dataCnt;
+  FPGA_SPI_Buf_Send[3] = trans.Bytes[0];
+  FPGA_SPI_Buf_Send[4] = trans.Bytes[1];
+  pBuf16 = FPGA_SPI_Buf_Send + RAM_DATA_OFFSET;
   for(i = 0; i < dataCnt; ++i)
   {
-    FPGA_SPI_Buf_Send[RAMData_BeginAddr + 0 + i * 2] = 0x00;
-    FPGA_SPI_Buf_Send[RAMData_BeginAddr + 1 + i * 2] = 0x00;
+    pBuf16[i] = dataSrc[i];
   }
-  spi_SendRece(FPGA_SPI_Buf_Send, FPGA_SPI_Buf_Rece, 5 + dataCnt * 2);
+  spi_SendRece(FPGA_SPI_Buf_Send, FPGA_SPI_Buf_Rece, RAM_DATA_OFFSET + dataCnt * 2);
+}
+
+void FPGA_SPI_readRAM(uint16_t firstAddr, uint16_t dataCnt, uint16_t* dataDes)
+{
+  uint32_t i;
+  union Data16 trans;
+  uint16_t* pBuf16;
+
+  FPGA_SPI_Buf_Send[0] = 0x07;
+  trans.data = firstAddr;
+  FPGA_SPI_Buf_Send[1] = trans.Bytes[0];
+  FPGA_SPI_Buf_Send[2] = trans.Bytes[1];
+  trans.data = dataCnt;
+  FPGA_SPI_Buf_Send[3] = trans.Bytes[0];
+  FPGA_SPI_Buf_Send[4] = trans.Bytes[1];
+  pBuf16 = FPGA_SPI_Buf_Send + RAM_DATA_OFFSET;
+  for(i = 0; i < dataCnt; ++i)
+  {
+    pBuf16[i] = 0;
+  }
+  spi_SendRece(FPGA_SPI_Buf_Send, FPGA_SPI_Buf_Rece, RAM_DATA_OFFSET + dataCnt * 2);
+  pBuf16 = FPGA_SPI_Buf_Rece + RAM_DATA_OFFSET;
+  for(i = 0; i < dataCnt; ++i)
+  {
+    dataDes[i] = pBuf16[i];
+  }
 }
