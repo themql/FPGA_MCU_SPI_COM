@@ -78,7 +78,7 @@ The ​Data_begin and Data_end signals are used as the start and end flags for c
 
 #### 2.2.1. general schema
 
-![](README.assert/schema_ram_like.jpg)
+![](README.assert/schema_ram_like.svg)
 
 * spi interface module (spi_if)
   
@@ -113,7 +113,7 @@ Each time the MCU initiates a transfer, it first transfers addr, which determine
 
 #### 2.3.1. General schema
 
-![](README.assert/schema_ins_pars.jpg)
+![](README.assert/schema_ins_pars.svg)
 
 * spi interface module (spi_if)
 
@@ -144,7 +144,7 @@ A simple example is provided in the essential section.
 
 * Inputs to the state machine are SPI transfer start and end flag signals (e.g. `SPI_Data_begin` and `SPI_Data_end`)
 
-![](README.assert/state_intro.png)
+![](README.assert/state_intro.svg)
 
 * The state names are generally `s_opcode_state_wait` and `s_opcode_state`, the former is used to wait for the arrival of the end-of-transmission flag, while the latter completes the corresponding operation within a clock and then moves to the next wait state.
 
@@ -395,7 +395,7 @@ todo
 
 ### 4.1. Structure Block Diagram
 
-![](README.assert/diagram_simpleDSP.png)
+![](README.assert/diagram_simpleDSP.svg)
 
 ### 4.2. User Register Definition
 

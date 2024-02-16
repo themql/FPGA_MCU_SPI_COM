@@ -76,7 +76,7 @@ SPI模块实现了spi的从机模式，并且只支持mode 0，即上升沿采�
 
 #### 2.2.1. 总模式
 
-![](README.assert/schema_ram_like.jpg)
+![](README.assert/schema_ram_like.svg)
 
 * spi接口模块（spi_if）
   
@@ -111,7 +111,7 @@ SPI模块实现了spi的从机模式，并且只支持mode 0，即上升沿采�
 
 #### 2.3.1. 总模式
 
-![](README.assert/schema_ins_pars.jpg)
+![](README.assert/schema_ins_pars.svg)
 
 * spi接口模块（spi_if）
 * 指令解析接口（ins_pars_if）
@@ -138,7 +138,7 @@ essential部分中提供了一个简单示例。
 
 * 状态机的输入为SPI传输的开始与结束标志信号（例如：`SPI_Data_begin`与`SPI_Data_end`）
 
-![](README.assert/state_intro.png)
+![](README.assert/state_intro.svg)
 
 * 状态命名一般为`s_操作码_状态_wait`与 `s_操作码_状态`，前者用于等待传输结束标志的到来，后者则在一个时钟内完成相应操作，然后进入下一个wait状态。
 
@@ -392,7 +392,7 @@ stateDiagram
 
 ### 4.1. 结构框图
 
-![](README.assert/diagram_simpleDSP.png)
+![](README.assert/diagram_simpleDSP.svg)
 
 ### 4.2. 寄存器定义
 
